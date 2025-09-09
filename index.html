@@ -171,13 +171,13 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const b64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
 const ubuf = b64s => Uint8Array.from(atob(b64s), c => c.charCodeAt(0)).buffer;
 
-function setStatus(text, ok=true){ const el=$('#status'); el.textContent=text; el.className = ok ? 'ok' : 'err'; }
+function setStatus(text, ok=true){ const el=$('#status'); if(el){el.textContent=text; el.className = ok ? 'ok' : 'err';} }
 
 /* Fecha/hora por defecto: ahora + 1 hora */
 function setDefaultDate(){
   const d = new Date(Date.now()+60*60*1000);
   const isoLocal = new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
-  $('#dt').value = isoLocal;
+  const dt = $('#dt'); if(dt) dt.value = isoLocal;
 }
 
 /* ===== Cripto (PBKDF2 + AES-GCM) ===== */
@@ -202,13 +202,18 @@ async function decryptJson(aesKey, pack){
   return JSON.parse(dec.decode(pt));
 }
 
-/* ===== Estado inicial ===== */
+/* ===== Vistas ===== */
 function show(id){
-  for (const v of ['setupView','loginView','appView']) $(v).style.display = (v===id?'block':'none');
-  $('#logout').style.display = (id==='appView') ? 'inline' : 'none';
+  ['setupView','loginView','appView'].forEach(v=>{
+    const el = document.getElementById(v);
+    if (el) el.style.display = (v===id?'block':'none');
+  });
+  const l = document.getElementById('logout');
+  if (l) l.style.display = (id==='appView') ? 'inline' : 'none';
 }
 function refreshContactsSelect(list){
-  const sel = $('#contactSelect'); sel.innerHTML='';
+  const sel = $('#contactSelect'); if(!sel) return;
+  sel.innerHTML='';
   if (!list || list.length===0){ const opt=document.createElement('option'); opt.value=''; opt.text='— Sin contactos —'; sel.add(opt); return; }
   for (const c of list){ const opt=document.createElement('option'); opt.value=c.phone; opt.text=`${c.name} (${c.phone})`; sel.add(opt); }
 }
@@ -216,13 +221,13 @@ function isPhoneValid(p){ return /^\+\d{6,15}$/.test(p); }
 
 /* ===== Mensaje ===== */
 function buildMessage(){
-  const dtVal = $('#dt').value;
+  const dtVal = $('#dt') ? $('#dt').value : null;
   const when = dtVal ? new Date(dtVal) : new Date();
   const d = when.toLocaleDateString(undefined, {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
   const t = when.toLocaleTimeString(undefined, {hour:'2-digit', minute:'2-digit'});
   return `¡Hola! 👋 Tienes un recordatorio para el ${d} a las ${t}.`;
 }
-function updateMessage(){ $('#msg').value = buildMessage(); }
+function updateMessage(){ const m=$('#msg'); if(m) m.value = buildMessage(); }
 
 /* ===== App ===== */
 async function init(){
@@ -230,107 +235,106 @@ async function init(){
   if (!state){ show('setupView'); setStatus('Primer uso'); return; }
   show('loginView'); setStatus('Introduce tus credenciales');
 }
-init();
-setDefaultDate();
-updateMessage();
 
-/* Setup (primer uso) */
-$('#btnSetup').onclick = async ()=>{
-  const user = $('#setupUser').value.trim();
-  const pass = $('#setupPass').value;
-  if (!user || pass.length<6){ setStatus('Usuario y contraseña (>=6) requeridos', false); return; }
-  const {aesKey, pwHashB64, saltB64} = await derive(pass);
-  S.key = aesKey; S.user = user;
-  const emptyContacts = { list: [] };
-  const pack = await encryptJson(aesKey, emptyContacts);
-  S.save({ user, pwHashB64, saltB64, vault: pack });
-  $('#who').textContent = `Conectado: ${user}`;
-  refreshContactsSelect([]);
-  show('appView'); setStatus('Sesión iniciada');
-};
+document.addEventListener('DOMContentLoaded', ()=>{
+  init();
+  setDefaultDate();
+  updateMessage();
 
-/* Login */
-$('#btnLogin').onclick = async ()=>{
-  const user = $('#loginUser').value.trim();
-  const pass = $('#loginPass').value;
-  const state = S.state();
-  if (!state){ setStatus('No hay datos guardados. Crea una cuenta.', false); show('setupView'); return; }
-  if (user !== state.user){ setStatus('Usuario incorrecto', false); return; }
-  try{
-    const {aesKey, pwHashB64} = await derive(pass, state.saltB64);
-    if (pwHashB64 !== state.pwHashB64){ setStatus('Contraseña incorrecta', false); return; }
-    const vault = await decryptJson(aesKey, state.vault);
+  // Setup (primer uso)
+  $('#btnSetup')?.addEventListener('click', async ()=>{
+    const user = $('#setupUser').value.trim();
+    const pass = $('#setupPass').value;
+    if (!user || pass.length<6){ setStatus('Usuario y contraseña (>=6) requeridos', false); return; }
+    const {aesKey, pwHashB64, saltB64} = await derive(pass);
     S.key = aesKey; S.user = user;
-    $('#who').textContent = `Conectado: ${user}`;
-    refreshContactsSelect(vault.list);
+    const emptyContacts = { list: [] };
+    const pack = await encryptJson(aesKey, emptyContacts);
+    S.save({ user, pwHashB64, saltB64, vault: pack });
+    const who=$('#who'); if(who) who.textContent = `Conectado: ${user}`;
+    refreshContactsSelect([]);
     show('appView'); setStatus('Sesión iniciada');
-  }catch(e){ console.error(e); setStatus('Error al descifrar datos', false); }
-};
+  });
 
-/* Logout & Reset */
-$('#logout').onclick = ()=>{ show('loginView'); setStatus('Sesión cerrada'); $('#loginPass').value=''; };
-$('#btnReset').onclick = ()=>{ if(confirm('Esto borrará TODA la app (usuario, contactos). ¿Continuar?')){ S.clear(); location.reload(); } };
+  // Login
+  $('#btnLogin')?.addEventListener('click', async ()=>{
+    const user = $('#loginUser').value.trim();
+    const pass = $('#loginPass').value;
+    const state = S.state();
+    if (!state){ setStatus('No hay datos guardados. Crea una cuenta.', false); show('setupView'); return; }
+    if (user !== state.user){ setStatus('Usuario incorrecto', false); return; }
+    try{
+      const {aesKey, pwHashB64} = await derive(pass, state.saltB64);
+      if (pwHashB64 !== state.pwHashB64){ setStatus('Contraseña incorrecta', false); return; }
+      const vault = await decryptJson(aesKey, state.vault);
+      S.key = aesKey; S.user = user;
+      const who=$('#who'); if(who) who.textContent = `Conectado: ${user}`;
+      refreshContactsSelect(vault.list);
+      show('appView'); setStatus('Sesión iniciada');
+    }catch(e){ console.error(e); setStatus('Error al descifrar datos', false); }
+  });
 
-/* Contactos: cargar/guardar */
-async function loadVault(){
-  const state = S.state();
-  return state ? await decryptJson(S.key, state.vault) : { list: [] };
-}
-async function saveVault(vault){
-  const pack = await encryptJson(S.key, vault);
-  const st = S.state(); st.vault = pack; S.save(st);
-}
+  // Logout & Reset
+  $('#logout')?.addEventListener('click', ()=>{ show('loginView'); setStatus('Sesión cerrada'); const lp=$('#loginPass'); if(lp) lp.value=''; });
+  $('#btnReset')?.addEventListener('click', ()=>{ if(confirm('Esto borrará TODA la app (usuario, contactos). ¿Continuar?')){ S.clear(); location.reload(); } });
 
-/* Añadir / eliminar contactos */
-$('#btnAdd').onclick = async ()=>{
-  const name = $('#newName').value.trim();
-  const phone = $('#newPhone').value.trim();
-  if (!name || !isPhoneValid(phone)){ setStatus('Nombre y teléfono válido (+ prefijo) requeridos', false); return; }
-  const vault = await loadVault();
-  if (vault.list.some(c=>c.phone===phone)){ setStatus('Ese teléfono ya existe', false); return; }
-  vault.list.push({name, phone});
-  await saveVault(vault);
-  refreshContactsSelect(vault.list);
-  $('#newName').value=''; $('#newPhone').value='';
-  setStatus('Contacto añadido');
-};
-$('#btnRemove').onclick = async ()=>{
-  const phone = $('#contactSelect').value;
-  if (!phone){ setStatus('No hay contacto seleccionado', false); return; }
-  const vault = await loadVault();
-  const before = vault.list.length;
-  vault.list = vault.list.filter(c=>c.phone!==phone);
-  await saveVault(vault);
-  refreshContactsSelect(vault.list);
-  setStatus(before!==vault.list.length ? 'Contacto eliminado' : 'No se encontró el contacto', before!==vault.list.length);
-};
+  // Gestión de contactos
+  async function loadVault(){ const state = S.state(); return state ? await decryptJson(S.key, state.vault) : { list: [] }; }
+  async function saveVault(vault){ const pack = await encryptJson(S.key, vault); const st = S.state(); st.vault = pack; S.save(st); }
 
-/* Fecha → refrescar mensaje */
-$('#dt').addEventListener('change', updateMessage);
+  $('#btnAdd')?.addEventListener('click', async ()=>{
+    const name = $('#newName').value.trim();
+    const phone = $('#newPhone').value.trim();
+    if (!name || !isPhoneValid(phone)){ setStatus('Nombre y teléfono válido (+ prefijo) requeridos', false); return; }
+    const vault = await loadVault();
+    if (vault.list.some(c=>c.phone===phone)){ setStatus('Ese teléfono ya existe', false); return; }
+    vault.list.push({name, phone});
+    await saveVault(vault);
+    refreshContactsSelect(vault.list);
+    $('#newName').value=''; $('#newPhone').value='';
+    setStatus('Contacto añadido');
+  });
 
-/* Enviar / copiar enlace WhatsApp */
-function buildWaLink(){
-  const phone = $('#contactSelect').value;
-  if (!isPhoneValid(phone)) return null;
-  const text = encodeURIComponent($('#msg').value.trim() || buildMessage());
-  return `https://wa.me/${phone.replace('+','')}/?text=${text}`;
-}
-$('#btnSend').onclick = ()=>{
-  const url = buildWaLink();
-  if (!url){ setStatus('Selecciona un contacto válido', false); return; }
-  window.open(url, '_blank');
-  setStatus('Abriendo WhatsApp…');
-};
-$('#btnCopy').onclick = async ()=>{
-  const url = buildWaLink();
-  if (!url){ setStatus('Selecciona un contacto válido', false); return; }
-  try{ await navigator.clipboard.writeText(url); setStatus('Enlace copiado'); }
-  catch{ setStatus('No se pudo copiar', false); }
-};
+  $('#btnRemove')?.addEventListener('click', async ()=>{
+    const sel = $('#contactSelect'); const phone = sel ? sel.value : '';
+    if (!phone){ setStatus('No hay contacto seleccionado', false); return; }
+    const vault = await loadVault();
+    const before = vault.list.length;
+    vault.list = vault.list.filter(c=>c.phone!==phone);
+    await saveVault(vault);
+    refreshContactsSelect(vault.list);
+    setStatus(before!==vault.list.length ? 'Contacto eliminado' : 'No se encontró el contacto', before!==vault.list.length);
+  });
 
-/* Accesibilidad: Enter para loguear */
-['loginUser','loginPass'].forEach(id => $(id).addEventListener('keydown', e=>{ if(e.key==='Enter') $('#btnLogin').click(); }));
-['setupUser','setupPass'].forEach(id => $(id).addEventListener('keydown', e=>{ if(e.key==='Enter') $('#btnSetup').click(); }));
+  // Fecha → refrescar mensaje
+  $('#dt')?.addEventListener('change', updateMessage);
+
+  // Enviar / copiar enlace WhatsApp
+  function buildWaLink(){
+    const sel = $('#contactSelect'); const phone = sel ? sel.value : '';
+    if (!isPhoneValid(phone)) return null;
+    const msg = $('#msg') ? $('#msg').value.trim() : '';
+    const text = encodeURIComponent(msg || buildMessage());
+    return `https://wa.me/${phone.replace('+','')}/?text=${text}`;
+  }
+  $('#btnSend')?.addEventListener('click', ()=>{
+    const url = buildWaLink();
+    if (!url){ setStatus('Selecciona un contacto válido', false); return; }
+    window.open(url, '_blank');
+    setStatus('Abriendo WhatsApp…');
+  });
+  $('#btnCopy')?.addEventListener('click', async ()=>{
+    const url = buildWaLink();
+    if (!url){ setStatus('Selecciona un contacto válido', false); return; }
+    try{ await navigator.clipboard.writeText(url); setStatus('Enlace copiado'); }
+    catch{ setStatus('No se pudo copiar', false); }
+  });
+
+  // Enter para loguear/crear
+  ['loginUser','loginPass'].forEach(id => { const el=$('#'+id); el&&el.addEventListener('keydown', e=>{ if(e.key==='Enter') $('#btnLogin')?.click(); }); });
+  ['setupUser','setupPass'].forEach(id => { const el=$('#'+id); el&&el.addEventListener('keydown', e=>{ if(e.key==='Enter') $('#btnSetup')?.click(); }); });
+
+});
 </script>
 
 <!-- PWA: registrar Service Worker -->
