@@ -79,7 +79,7 @@
           </div>
         </div>
         <div class="actions" style="margin-top:14px">
-          <button id="btnSetup" class="btn btn-primary">Crear y acceder</button>
+          <button id="btnSetup" class="btn btn-primary" type="button">Crear y acceder</button>
         </div>
         <p class="hint">Todo se guarda localmente y cifrado (AES-GCM + PBKDF2). Si olvidas la contraseña, los contactos no se podrán recuperar.</p>
       </div>
@@ -97,8 +97,8 @@
           </div>
         </div>
         <div class="actions" style="margin-top:14px">
-          <button id="btnLogin" class="btn btn-primary">Entrar</button>
-          <button id="btnReset" class="btn btn-ghost" title="Borra toda la app">Borrar datos de la app</button>
+          <button id="btnLogin" class="btn btn-primary" type="button">Entrar</button>
+          <button id="btnReset" class="btn btn-ghost" type="button" title="Borra toda la app">Borrar datos de la app</button>
         </div>
         <p class="hint">Consejo: fija este sitio como app (PWA) en tu móvil/escritorio para acceso directo.</p>
       </div>
@@ -125,8 +125,8 @@
           <div>
             <label>Acciones</label>
             <div class="actions">
-              <button id="btnSend" class="btn btn-primary">Enviar por WhatsApp</button>
-              <button id="btnCopy" class="btn btn-ghost">Copiar enlace de WhatsApp</button>
+              <button id="btnSend" class="btn btn-primary" type="button">Enviar por WhatsApp</button>
+              <button id="btnCopy" class="btn btn-ghost" type="button">Copiar enlace de WhatsApp</button>
             </div>
             <div class="split"></div>
             <div>
@@ -136,8 +136,8 @@
                 <input id="newPhone" placeholder="Teléfono (ej. +34600111222)">
               </div>
               <div class="actions" style="margin-top:10px">
-                <button id="btnAdd" class="btn btn-ghost">Añadir contacto</button>
-                <button id="btnRemove" class="btn btn-danger">Eliminar contacto seleccionado</button>
+                <button id="btnAdd" class="btn btn-ghost" type="button">Añadir contacto</button>
+                <button id="btnRemove" class="btn btn-danger" type="button">Eliminar contacto seleccionado</button>
               </div>
               <p class="hint">Formato E.164 recomendado: +34…, +52…, etc.</p>
             </div>
@@ -158,189 +158,209 @@
 
 <script>
 /* ===== Utilidades ===== */
-const enc = new TextEncoder(); const dec = new TextDecoder();
-const S = {
+var enc = new TextEncoder();
+var dec = new TextDecoder();
+var S = {
   key:null, user:null, stateKey:'wa-reminders-app-v1',
-  state(){ return JSON.parse(localStorage.getItem(this.stateKey) || 'null') },
-  save(obj){ localStorage.setItem(this.stateKey, JSON.stringify(obj)) },
-  clear(){ localStorage.removeItem(this.stateKey) }
+  state: function(){ var v = localStorage.getItem(this.stateKey); return v ? JSON.parse(v) : null; },
+  save: function(obj){ localStorage.setItem(this.stateKey, JSON.stringify(obj)); },
+  clear: function(){ localStorage.removeItem(this.stateKey); }
 };
-const qs = sel => document.querySelector(sel);
-const $ = id => document.getElementById(id);
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-const b64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
-const ubuf = b64s => Uint8Array.from(atob(b64s), c => c.charCodeAt(0)).buffer;
-
-function setStatus(text, ok=true){ const el=$('#status'); if(el){el.textContent=text; el.className = ok ? 'ok' : 'err';} }
+function $(id){ return document.getElementById(id); }
+function setStatus(text, ok){ if (ok===void 0) ok=true; var el=$('status'); if(el){ el.textContent=text; el.className = ok ? 'ok' : 'err'; } }
+function b64(buf){ return btoa(String.fromCharCode.apply(null, new Uint8Array(buf))); }
+function ubuf(b64s){ return Uint8Array.from(atob(b64s), function(c){ return c.charCodeAt(0); }).buffer; }
 
 /* Fecha/hora por defecto: ahora + 1 hora */
 function setDefaultDate(){
-  const d = new Date(Date.now()+60*60*1000);
-  const isoLocal = new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
-  const dt = $('#dt'); if(dt) dt.value = isoLocal;
+  var d = new Date(Date.now()+60*60*1000);
+  var isoLocal = new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  var el = $('dt'); if (el) el.value = isoLocal;
 }
 
 /* ===== Cripto (PBKDF2 + AES-GCM) ===== */
 async function derive(password, saltB64){
-  const salt = saltB64 ? ubuf(saltB64) : crypto.getRandomValues(new Uint8Array(16)).buffer;
-  const baseKey = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']);
-  const bits = await crypto.subtle.deriveBits({name:'PBKDF2', salt, iterations:250000, hash:'SHA-256'}, baseKey, 256);
-  const keyBytes = new Uint8Array(bits);
-  const pwHash = await crypto.subtle.digest('SHA-256', keyBytes);
-  const aesKey = await crypto.subtle.importKey('raw', keyBytes, {name:'AES-GCM'}, false, ['encrypt','decrypt']);
-  return { aesKey, pwHashB64: b64(pwHash), saltB64: b64(salt) };
+  var salt = saltB64 ? ubuf(saltB64) : crypto.getRandomValues(new Uint8Array(16)).buffer;
+  var baseKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+  var bits = await crypto.subtle.deriveBits({name:'PBKDF2', salt:salt, iterations:250000, hash:'SHA-256'}, baseKey, 256);
+  var keyBytes = new Uint8Array(bits);
+  var pwHash = await crypto.subtle.digest('SHA-256', keyBytes);
+  var aesKey = await crypto.subtle.importKey('raw', keyBytes, {name:'AES-GCM'}, false, ['encrypt','decrypt']);
+  return { aesKey:aesKey, pwHashB64: b64(pwHash), saltB64: b64(salt) };
 }
 async function encryptJson(aesKey, obj){
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const data = enc.encode(JSON.stringify(obj));
-  const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, aesKey, data);
+  var iv = crypto.getRandomValues(new Uint8Array(12));
+  var data = new TextEncoder().encode(JSON.stringify(obj));
+  var ct = await crypto.subtle.encrypt({name:'AES-GCM', iv:iv}, aesKey, data);
   return { iv: b64(iv), ct: b64(ct) };
 }
 async function decryptJson(aesKey, pack){
-  const iv = ubuf(pack.iv); const ct = ubuf(pack.ct);
-  const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:new Uint8Array(iv)}, aesKey, ct);
-  return JSON.parse(dec.decode(pt));
+  var iv = ubuf(pack.iv); var ct = ubuf(pack.ct);
+  var pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:new Uint8Array(iv)}, aesKey, ct);
+  return JSON.parse(new TextDecoder().decode(pt));
 }
 
 /* ===== Vistas ===== */
 function show(id){
-  ['setupView','loginView','appView'].forEach(v=>{
-    const el = document.getElementById(v);
-    if (el) el.style.display = (v===id?'block':'none');
-  });
-  const l = document.getElementById('logout');
-  if (l) l.style.display = (id==='appView') ? 'inline' : 'none';
+  var ids=['setupView','loginView','appView'];
+  for (var i=0;i<ids.length;i++){ var el=$(ids[i]); if (el) el.style.display = (ids[i]===id?'block':'none'); }
+  var l = $('logout'); if (l) l.style.display = (id==='appView') ? 'inline' : 'none';
 }
 function refreshContactsSelect(list){
-  const sel = $('#contactSelect'); if(!sel) return;
+  var sel = $('contactSelect'); if(!sel) return;
   sel.innerHTML='';
-  if (!list || list.length===0){ const opt=document.createElement('option'); opt.value=''; opt.text='— Sin contactos —'; sel.add(opt); return; }
-  for (const c of list){ const opt=document.createElement('option'); opt.value=c.phone; opt.text=`${c.name} (${c.phone})`; sel.add(opt); }
+  if (!list || list.length===0){
+    var opt=document.createElement('option'); opt.value=''; opt.text='— Sin contactos —'; sel.add(opt); return;
+  }
+  for (var i=0;i<list.length;i++){ var c=list[i]; var opt=document.createElement('option'); opt.value=c.phone; opt.text=c.name+' ('+c.phone+')'; sel.add(opt); }
 }
 function isPhoneValid(p){ return /^\+\d{6,15}$/.test(p); }
 
 /* ===== Mensaje ===== */
 function buildMessage(){
-  const dtVal = $('#dt') ? $('#dt').value : null;
-  const when = dtVal ? new Date(dtVal) : new Date();
-  const d = when.toLocaleDateString(undefined, {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
-  const t = when.toLocaleTimeString(undefined, {hour:'2-digit', minute:'2-digit'});
-  return `¡Hola! 👋 Tienes un recordatorio para el ${d} a las ${t}.`;
+  var dtEl = $('dt'); var dtVal = dtEl ? dtEl.value : '';
+  var when = dtVal ? new Date(dtVal) : new Date();
+  var d = when.toLocaleDateString(undefined, {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+  var t = when.toLocaleTimeString(undefined, {hour:'2-digit', minute:'2-digit'});
+  return '¡Hola! 👋 Tienes un recordatorio para el '+d+' a las '+t+'.';
 }
-function updateMessage(){ const m=$('#msg'); if(m) m.value = buildMessage(); }
+function updateMessage(){ var m=$('msg'); if(m) m.value = buildMessage(); }
 
 /* ===== App ===== */
-async function init(){
-  const state = S.state();
-  if (!state){ show('setupView'); setStatus('Primer uso'); return; }
-  show('loginView'); setStatus('Introduce tus credenciales');
+function wireEvents(){
+  var btnSetup = $('btnSetup');
+  if (btnSetup){
+    btnSetup.addEventListener('click', async function(){
+      var user = $('setupUser').value.trim();
+      var pass = $('setupPass').value;
+      if (!user || pass.length<6){ setStatus('Usuario y contraseña (>=6) requeridos', false); return; }
+      try{
+        var r = await derive(pass);
+        S.key = r.aesKey; S.user = user;
+        var pack = await encryptJson(S.key, { list: [] });
+        S.save({ user: user, pwHashB64: r.pwHashB64, saltB64: r.saltB64, vault: pack });
+        var who=$('who'); if(who) who.textContent = 'Conectado: '+user;
+        refreshContactsSelect([]);
+        show('appView'); setStatus('Sesión iniciada');
+      }catch(e){
+        console.error(e); setStatus('Error creando el almacén', false);
+      }
+    });
+  }
+
+  var btnLogin = $('btnLogin');
+  if (btnLogin){
+    btnLogin.addEventListener('click', async function(){
+      var user = $('loginUser').value.trim();
+      var pass = $('loginPass').value;
+      var state = S.state();
+      if (!state){ setStatus('No hay datos guardados. Crea una cuenta.', false); show('setupView'); return; }
+      if (user !== state.user){ setStatus('Usuario incorrecto', false); return; }
+      try{
+        var r = await derive(pass, state.saltB64);
+        if (r.pwHashB64 !== state.pwHashB64){ setStatus('Contraseña incorrecta', false); return; }
+        var vault = await decryptJson(r.aesKey, state.vault);
+        S.key = r.aesKey; S.user = user;
+        var who=$('who'); if(who) who.textContent = 'Conectado: '+user;
+        refreshContactsSelect(vault.list);
+        show('appView'); setStatus('Sesión iniciada');
+      }catch(e){ console.error(e); setStatus('Error al descifrar datos', false); }
+    });
+  }
+
+  var logout = $('logout');
+  if (logout){
+    logout.addEventListener('click', function(){ show('loginView'); setStatus('Sesión cerrada'); var lp=$('loginPass'); if(lp) lp.value=''; });
+  }
+  var btnReset = $('btnReset');
+  if (btnReset){
+    btnReset.addEventListener('click', function(){ if(confirm('Esto borrará TODA la app (usuario, contactos). ¿Continuar?')){ S.clear(); location.reload(); } });
+  }
+
+  // Contactos
+  async function loadVault(){ var st = S.state(); return st ? await decryptJson(S.key, st.vault) : { list: [] }; }
+  async function saveVault(v){ var pack = await encryptJson(S.key, v); var st = S.state(); st.vault = pack; S.save(st); }
+
+  var btnAdd = $('btnAdd');
+  if (btnAdd){
+    btnAdd.addEventListener('click', async function(){
+      var name = $('newName').value.trim();
+      var phone = $('newPhone').value.trim();
+      if (!name || !isPhoneValid(phone)){ setStatus('Nombre y teléfono válido (+ prefijo) requeridos', false); return; }
+      var vault = await loadVault();
+      for (var i=0;i<vault.list.length;i++){ if (vault.list[i].phone===phone){ setStatus('Ese teléfono ya existe', false); return; } }
+      vault.list.push({name:name, phone:phone});
+      await saveVault(vault);
+      refreshContactsSelect(vault.list);
+      $('newName').value=''; $('newPhone').value='';
+      setStatus('Contacto añadido');
+    });
+  }
+
+  var btnRemove = $('btnRemove');
+  if (btnRemove){
+    btnRemove.addEventListener('click', async function(){
+      var sel = $('contactSelect'); var phone = sel ? sel.value : '';
+      if (!phone){ setStatus('No hay contacto seleccionado', false); return; }
+      var vault = await loadVault();
+      var before = vault.list.length;
+      vault.list = vault.list.filter(function(c){ return c.phone!==phone; });
+      await saveVault(vault);
+      refreshContactsSelect(vault.list);
+      setStatus(before!==vault.list.length ? 'Contacto eliminado' : 'No se encontró el contacto', before!==vault.list.length);
+    });
+  }
+
+  var dt = $('dt'); if (dt){ dt.addEventListener('change', updateMessage); }
+
+  // WhatsApp
+  function buildWaLink(){
+    var sel = $('contactSelect'); var phone = sel ? sel.value : '';
+    if (!isPhoneValid(phone)) return null;
+    var msg = $('msg') ? $('msg').value.trim() : '';
+    var text = encodeURIComponent(msg || buildMessage());
+    return 'https://wa.me/'+phone.replace('+','')+'/?text='+text;
+  }
+  var btnSend = $('btnSend'); if (btnSend){
+    btnSend.addEventListener('click', function(){
+      var url = buildWaLink();
+      if (!url){ setStatus('Selecciona un contacto válido', false); return; }
+      window.open(url, '_blank'); setStatus('Abriendo WhatsApp…');
+    });
+  }
+  var btnCopy = $('btnCopy'); if (btnCopy){
+    btnCopy.addEventListener('click', async function(){
+      var url = buildWaLink();
+      if (!url){ setStatus('Selecciona un contacto válido', false); return; }
+      try{ await navigator.clipboard.writeText(url); setStatus('Enlace copiado'); }
+      catch(e){ setStatus('No se pudo copiar', false); }
+    });
+  }
+
+  // Teclas rápidas
+  var lu=$('loginUser'), lp=$('loginPass'), su=$('setupUser'), sp=$('setupPass');
+  if (lu){ lu.addEventListener('keydown', function(e){ if(e.key==='Enter'){ var b=$('btnLogin'); if(b) b.click(); } }); }
+  if (lp){ lp.addEventListener('keydown', function(e){ if(e.key==='Enter'){ var b=$('btnLogin'); if(b) b.click(); } }); }
+  if (su){ su.addEventListener('keydown', function(e){ if(e.key==='Enter'){ var b=$('btnSetup'); if(b) b.click(); } }); }
+  if (sp){ sp.addEventListener('keydown', function(e){ if(e.key==='Enter'){ var b=$('btnSetup'); if(b) b.click(); } }); }
 }
 
-document.addEventListener('DOMContentLoaded', ()=>{
-  init();
+function init(){
+  var state = S.state();
+  if (!state){ show('setupView'); setStatus('Primer uso'); }
+  else{ show('loginView'); setStatus('Introduce tus credenciales'); }
   setDefaultDate();
   updateMessage();
+  wireEvents();
+}
 
-  // Setup (primer uso)
-  $('#btnSetup')?.addEventListener('click', async ()=>{
-    const user = $('#setupUser').value.trim();
-    const pass = $('#setupPass').value;
-    if (!user || pass.length<6){ setStatus('Usuario y contraseña (>=6) requeridos', false); return; }
-    const {aesKey, pwHashB64, saltB64} = await derive(pass);
-    S.key = aesKey; S.user = user;
-    const emptyContacts = { list: [] };
-    const pack = await encryptJson(aesKey, emptyContacts);
-    S.save({ user, pwHashB64, saltB64, vault: pack });
-    const who=$('#who'); if(who) who.textContent = `Conectado: ${user}`;
-    refreshContactsSelect([]);
-    show('appView'); setStatus('Sesión iniciada');
-  });
-
-  // Login
-  $('#btnLogin')?.addEventListener('click', async ()=>{
-    const user = $('#loginUser').value.trim();
-    const pass = $('#loginPass').value;
-    const state = S.state();
-    if (!state){ setStatus('No hay datos guardados. Crea una cuenta.', false); show('setupView'); return; }
-    if (user !== state.user){ setStatus('Usuario incorrecto', false); return; }
-    try{
-      const {aesKey, pwHashB64} = await derive(pass, state.saltB64);
-      if (pwHashB64 !== state.pwHashB64){ setStatus('Contraseña incorrecta', false); return; }
-      const vault = await decryptJson(aesKey, state.vault);
-      S.key = aesKey; S.user = user;
-      const who=$('#who'); if(who) who.textContent = `Conectado: ${user}`;
-      refreshContactsSelect(vault.list);
-      show('appView'); setStatus('Sesión iniciada');
-    }catch(e){ console.error(e); setStatus('Error al descifrar datos', false); }
-  });
-
-  // Logout & Reset
-  $('#logout')?.addEventListener('click', ()=>{ show('loginView'); setStatus('Sesión cerrada'); const lp=$('#loginPass'); if(lp) lp.value=''; });
-  $('#btnReset')?.addEventListener('click', ()=>{ if(confirm('Esto borrará TODA la app (usuario, contactos). ¿Continuar?')){ S.clear(); location.reload(); } });
-
-  // Gestión de contactos
-  async function loadVault(){ const state = S.state(); return state ? await decryptJson(S.key, state.vault) : { list: [] }; }
-  async function saveVault(vault){ const pack = await encryptJson(S.key, vault); const st = S.state(); st.vault = pack; S.save(st); }
-
-  $('#btnAdd')?.addEventListener('click', async ()=>{
-    const name = $('#newName').value.trim();
-    const phone = $('#newPhone').value.trim();
-    if (!name || !isPhoneValid(phone)){ setStatus('Nombre y teléfono válido (+ prefijo) requeridos', false); return; }
-    const vault = await loadVault();
-    if (vault.list.some(c=>c.phone===phone)){ setStatus('Ese teléfono ya existe', false); return; }
-    vault.list.push({name, phone});
-    await saveVault(vault);
-    refreshContactsSelect(vault.list);
-    $('#newName').value=''; $('#newPhone').value='';
-    setStatus('Contacto añadido');
-  });
-
-  $('#btnRemove')?.addEventListener('click', async ()=>{
-    const sel = $('#contactSelect'); const phone = sel ? sel.value : '';
-    if (!phone){ setStatus('No hay contacto seleccionado', false); return; }
-    const vault = await loadVault();
-    const before = vault.list.length;
-    vault.list = vault.list.filter(c=>c.phone!==phone);
-    await saveVault(vault);
-    refreshContactsSelect(vault.list);
-    setStatus(before!==vault.list.length ? 'Contacto eliminado' : 'No se encontró el contacto', before!==vault.list.length);
-  });
-
-  // Fecha → refrescar mensaje
-  $('#dt')?.addEventListener('change', updateMessage);
-
-  // Enviar / copiar enlace WhatsApp
-  function buildWaLink(){
-    const sel = $('#contactSelect'); const phone = sel ? sel.value : '';
-    if (!isPhoneValid(phone)) return null;
-    const msg = $('#msg') ? $('#msg').value.trim() : '';
-    const text = encodeURIComponent(msg || buildMessage());
-    return `https://wa.me/${phone.replace('+','')}/?text=${text}`;
-  }
-  $('#btnSend')?.addEventListener('click', ()=>{
-    const url = buildWaLink();
-    if (!url){ setStatus('Selecciona un contacto válido', false); return; }
-    window.open(url, '_blank');
-    setStatus('Abriendo WhatsApp…');
-  });
-  $('#btnCopy')?.addEventListener('click', async ()=>{
-    const url = buildWaLink();
-    if (!url){ setStatus('Selecciona un contacto válido', false); return; }
-    try{ await navigator.clipboard.writeText(url); setStatus('Enlace copiado'); }
-    catch{ setStatus('No se pudo copiar', false); }
-  });
-
-  // Enter para loguear/crear
-  ['loginUser','loginPass'].forEach(id => { const el=$('#'+id); el&&el.addEventListener('keydown', e=>{ if(e.key==='Enter') $('#btnLogin')?.click(); }); });
-  ['setupUser','setupPass'].forEach(id => { const el=$('#'+id); el&&el.addEventListener('keydown', e=>{ if(e.key==='Enter') $('#btnSetup')?.click(); }); });
-
-});
+document.addEventListener('DOMContentLoaded', init);
 </script>
 
 <!-- PWA: registrar Service Worker -->
 <script>
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
+    window.addEventListener('load', function() {
       navigator.serviceWorker.register('./service-worker.js');
     });
   }

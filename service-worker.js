@@ -1,5 +1,5 @@
 // Robust SW for GitHub Pages (works under /<repo>/ scope)
-const VERSION = 'v1.1.0';
+const VERSION = 'v1.1.1';
 const CACHE = 'wa-reminders-' + VERSION;
 
 const base = self.registration.scope; // e.g., https://user.github.io/repo/
@@ -36,7 +36,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
 
   // Handle only same-origin requests within our scope
-  if (url.origin !== location.origin || !url.href.startsWith(base)) return;
+  if (url.origin !== location.origin || url.href.indexOf(base) !== 0) return;
 
   if (req.mode === 'navigate') {
     event.respondWith((async () => {
@@ -55,7 +55,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Static assets: cache-first
-  if (ASSETS.includes(url.href)) {
+  if (ASSETS.indexOf(url.href) !== -1) {
     event.respondWith((async () => {
       const cache = await caches.open(CACHE);
       const cached = await cache.match(req);
