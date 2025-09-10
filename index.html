@@ -51,11 +51,15 @@
   .subtitle{margin:2px 0 0; font-size:clamp(12px, 2.4vw, 14px); color:#475569}
   .hr{height:1px; background:var(--line); margin:10px 0 0}
 
-  /* Main area uses grid to center stages */
-  .main{ min-height:0; display:grid; }
-  .stage{ display:none; }
-  .center-stage{ display:grid; place-items:center; padding: clamp(12px, 4vw, 24px); }
-  .stage-inner{ width:100%; max-width:600px; }
+  /* Main area: true vertical centering */
+  .main{
+    height:100%; min-height:0;
+    display:flex; align-items:center; justify-content:center;
+    padding: clamp(12px, 4vw, 24px) max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-right));
+  }
+  .stage{ display:none; width:100%; }
+  .stage-inner{ width:100%; max-width:600px; margin-inline:auto; }
+  .stack{ display:grid; gap:20px; } /* más espacio entre inputs */
 
   .row{ display:grid; grid-template-columns:1fr; gap:14px }
   .field{ position:relative; }
@@ -83,7 +87,8 @@
 
   .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:16px }
   @media (max-width:720px){ .grid2{ grid-template-columns:1fr } }
-  .section{ padding:10px max(16px, env(safe-area-inset-left)) 0 max(16px, env(safe-area-inset-right)) }
+  .section{ padding:10px 0 0 }
+  .container{ width:100%; max-width:600px; margin-inline:auto; padding-inline:max(16px, env(safe-area-inset-left)); padding-right:max(16px, env(safe-area-inset-right)); }
   .contact-block{
     background:linear-gradient(180deg, rgba(246,247,255,.9), rgba(243,246,255,.85));
     border:1px solid rgba(94,91,255,.22); border-radius:18px; padding:16px;
@@ -96,7 +101,6 @@
            display:flex; justify-content:center; gap:18px; align-items:center }
   .chip{ padding:8px 12px; border-radius:999px; background:rgba(241,245,255,.9); border:1px solid rgba(94,91,255,.24); font-size:14px; color:#0b1220 }
   .logout{ color:#ef4444; text-decoration:underline; cursor:pointer; font-weight:700 }
-  .container{ width:100%; max-width:600px; margin-inline:auto; }
 </style>
 </head>
 <body>
@@ -104,7 +108,7 @@
   <div class="card">
 
     <!-- Header -->
-    <div class="auth-head container">
+    <div class="auth-head" style="padding-left:max(20px, env(safe-area-inset-left)); padding-right:max(20px, env(safe-area-inset-right))">
       <div class="logo">MF</div>
       <div style="min-width:0">
         <h1 id="hdrTitle" class="title">Iniciar sesión</h1>
@@ -115,10 +119,9 @@
 
     <!-- Main -->
     <div class="main">
-
       <!-- SETUP -->
-      <section id="setupView" class="stage center-stage">
-        <div class="stage-inner">
+      <section id="setupView" class="stage">
+        <div class="stage-inner stack">
           <div class="row">
             <div class="field">
               <svg class="icon-left" viewBox="0 0 24 24" fill="none"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5.33 0-8 2.67-8 6v1h16v-1c0-3.33-2.67-6-8-6Z" fill="currentColor"/></svg>
@@ -130,15 +133,15 @@
               <svg id="toggleSetup" class="icon-right" viewBox="0 0 24 24" fill="none"><path d="M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7Zm0 12a5 5 0 1 1 5-5 5 5 0 0 1-5 5Z" fill="currentColor"/></svg>
             </div>
           </div>
-          <div class="row" style="margin-top:6px">
+          <div class="row">
             <button id="btnSetup" class="btn" type="button">Crear y acceder</button>
           </div>
         </div>
       </section>
 
       <!-- LOGIN -->
-      <section id="loginView" class="stage center-stage" style="display:none">
-        <div class="stage-inner">
+      <section id="loginView" class="stage">
+        <div class="stage-inner stack">
           <div class="row">
             <div class="field">
               <svg class="icon-left" viewBox="0 0 24 24" fill="none"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5.33 0-8 2.67-8 6v1h16v-1c0-3.33-2.67-6-8-6Z" fill="currentColor"/></svg>
@@ -150,7 +153,7 @@
               <svg id="toggleLogin" class="icon-right" viewBox="0 0 24 24" fill="none"><path d="M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7Zm0 12a5 5 0 1 1 5-5 5 5 0 0 1-5 5Z" fill="currentColor"/></svg>
             </div>
           </div>
-          <div class="row" style="margin-top:6px">
+          <div class="row">
             <button id="btnLogin" class="btn" type="button">Entrar</button>
             <button id="btnReset" class="btn" type="button" style="display:none;background:transparent;color:#0b1220;border:1px dashed rgba(94,91,255,.35)">Borrar datos de la app</button>
           </div>
@@ -202,8 +205,8 @@
           <span id="logout" class="logout" style="display:none">Cerrar sesión</span>
         </div>
       </section>
-
     </div><!-- /main -->
+
   </div>
 </div>
 
@@ -346,6 +349,16 @@ function init(){
   show(state? 'loginView' : 'setupView');
   toggleResetVisibility();
   setDefaultDate(); updateMessage(); wireEvents();
+
+  // Centrar login / setup de forma robusta (sin depender de alturas)
+  const main=document.querySelector('.main');
+  function centerCurrent(){
+    const active = document.querySelector('#loginView[style*="block"], #setupView[style*="block"]');
+    if(active){
+      main.style.alignItems='center'; main.style.justifyContent='center';
+    }
+  }
+  centerCurrent();
 }
 document.addEventListener('DOMContentLoaded', init);
 </script>
