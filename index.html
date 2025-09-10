@@ -9,12 +9,11 @@
 <link rel="icon" href="icons/icon-192.png" sizes="192x192">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>
-  /* ===== Reset y tokens ===== */
   *, *::before, *::after { box-sizing: border-box; }
   :root{
     --bg1:#0b0e1a; --bg2:#11162a; --bg3:#0c2242;
     --violet:#5e5bff; --cyan:#10b5ff;
-    --ink:#0b1220; --muted:#6b7280; --line: rgba(94,91,255,.22);
+    --ink:#0b1220; --line: rgba(94,91,255,.22);
     --glassA: rgba(255,255,255,.86); --glassB: rgba(255,255,255,.82);
   }
   html,body{height:100%}
@@ -27,27 +26,22 @@
       linear-gradient(180deg, var(--bg3), var(--bg2) 55%, var(--bg1));
     min-height:100dvh;
   }
-  /* ===== Contenedor a pantalla completa ===== */
   .wrap{min-height:100dvh; display:flex; align-items:stretch; justify-content:center; padding:0}
   .card{
     width:min(980px, 100%);
-    min-height:100dvh; /* ocupa toda la pantalla SIEMPRE */
+    min-height:100dvh;
     background: linear-gradient(180deg, var(--glassA), var(--glassB));
-    border:0; border-radius:0;  /* móvil: ocupa toda la pantalla */
-    box-shadow:none;
+    border:0; border-radius:0; box-shadow:none;
     display:flex; flex-direction:column; overflow:auto;
   }
-  @supports (height: 100svh) {
-    .wrap{min-height:100svh}
-    .card{min-height:100svh}
-  }
+  @supports (height: 100svh) { .wrap{min-height:100svh} .card{min-height:100svh} }
   @media (min-width:900px){
     .wrap{padding:24px}
     .card{min-height:calc(100dvh - 48px); border-radius:28px; box-shadow: 0 40px 100px rgba(0,0,0,.35), 0 30px 70px rgba(94,91,255,.22);}
     @supports (height: 100svh) { .card{min-height:calc(100svh - 48px)} }
   }
 
-  /* ===== Cabecera ===== */
+  /* Header */
   .auth-head{ display:flex; align-items:center; gap:12px; padding:24px max(20px, env(safe-area-inset-left)) 8px max(20px, env(safe-area-inset-right)); }
   .logo{ width:46px; height:46px; border-radius:12px; color:#fff; font-weight:800; display:grid; place-items:center;
          background:linear-gradient(135deg, var(--cyan), var(--violet));
@@ -56,9 +50,11 @@
   .subtitle{margin:2px 0 0; font-size:clamp(12px, 2.4vw, 14px); color:#475569}
   .hr{height:1px; background:var(--line); margin:10px 0 0}
 
-  /* ===== Áreas de contenido con ancho máximo suave ===== */
+  /* Content areas */
   .pane{ padding:18px 16px; }
-  .container{ width:100%; max-width:600px; margin-inline:auto; }     /* limita ancho en móvil y desktop */
+  .pane.center{ flex:1; display:flex; }
+  .pane.center .container{ margin:auto; padding-bottom:max(16px, env(safe-area-inset-bottom)); }
+  .container{ width:100%; max-width:600px; margin-inline:auto; }
   .row{ display:grid; grid-template-columns:1fr; gap:14px }
   .field{ position:relative; }
   .field input, .field select, .field textarea, .field [type="datetime-local"]{
@@ -67,8 +63,10 @@
     font-size:16px; color:var(--ink); outline:none;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 10px 24px rgba(94,91,255,.08);
   }
+  /* Igualar tamaño de fecha y select (iOS/Android) */
+  .field select, .field input[type="datetime-local"]{ min-height:52px; }
+  .field input[type="datetime-local"]{ -webkit-appearance:none; appearance:none; }
   .field textarea{ min-height:120px; resize:vertical; overflow:auto; }
-  .field input::placeholder, .field textarea::placeholder{ color:#9aa3af }
   .icon-left, .icon-right{ position:absolute; top:50%; transform:translateY(-50%); width:22px; height:22px; opacity:.7 }
   .icon-left{ left:14px } .icon-right{ right:14px; cursor:pointer }
   label{ display:block; font-size:16px; color:#374151; margin:6px 0 8px; font-weight:700 }
@@ -82,7 +80,6 @@
     letter-spacing:.2px;
   }
 
-  /* ===== App: secciones y grid ===== */
   .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:16px }
   @media (max-width:720px){ .grid2{ grid-template-columns:1fr } }
   .section{ padding:10px 16px 0 }
@@ -94,7 +91,6 @@
   .btn-outline{ border:1px solid rgba(94,91,255,.35); background:#fff; color:#1f2a44; }
   .btn-danger{ background:linear-gradient(90deg,#ff6b6b,#ef4444); color:#fff; border:none }
 
-  /* ===== Footer centrado ===== */
   .footer{ padding:16px max(16px, env(safe-area-inset-left)) calc(16px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-right));
            display:flex; justify-content:center; gap:18px; align-items:center }
   .chip{ padding:8px 12px; border-radius:999px; background:rgba(241,245,255,.9); border:1px solid rgba(94,91,255,.24); font-size:14px; color:#0b1220 }
@@ -105,7 +101,6 @@
 <div class="wrap">
   <div class="card">
 
-    <!-- Cabecera -->
     <div class="auth-head container">
       <div class="logo">MF</div>
       <div style="min-width:0">
@@ -115,8 +110,8 @@
     </div>
     <div class="hr"></div>
 
-    <!-- SETUP (primer uso) -->
-    <div id="setupView" class="pane">
+    <!-- SETUP -->
+    <div id="setupView" class="pane center" style="display:none">
       <div class="container">
         <div class="row">
           <div class="field">
@@ -136,7 +131,7 @@
     </div>
 
     <!-- LOGIN -->
-    <div id="loginView" class="pane" style="display:none">
+    <div id="loginView" class="pane center" style="display:none">
       <div class="container">
         <div class="row">
           <div class="field">
@@ -206,7 +201,6 @@
 </div>
 
 <script>
-/* ===== Estado y utilidades (misma lógica) ===== */
 var enc = new TextEncoder(), dec = new TextDecoder();
 var S = { key:null, user:null, stateKey:'wa-reminders-app-v1',
   state(){ const v=localStorage.getItem(this.stateKey); return v?JSON.parse(v):null; },
@@ -232,10 +226,20 @@ async function derive(password, saltB64){
 }
 async function encryptJson(aesKey,obj){ const iv=crypto.getRandomValues(new Uint8Array(12)); const data=new TextEncoder().encode(JSON.stringify(obj)); const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},aesKey,data); return {iv:b64(iv),ct:b64(ct)}; }
 async function decryptJson(aesKey,pack){ const iv=ubuf(pack.iv), ct=ubuf(pack.ct); const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(iv)},aesKey,ct); return JSON.parse(new TextDecoder().decode(pt)); }
+
+function toggleResetVisibility(){
+  const reset=$('btnReset');
+  if(!reset) return;
+  reset.style.display = S.state() ? 'inline-flex' : 'none';
+}
+
 function show(id){
   ['setupView','loginView','appView'].forEach(v=>{ const el=$(v); if(el) el.style.display=(v===id?'block':'none'); });
   $('logout') && ($('logout').style.display = id==='appView' ? 'inline' : 'none');
+  if(id==='loginView') toggleResetVisibility();
+  if(id==='setupView'){ const r=$('btnReset'); if(r) r.style.display='none'; }
 }
+
 function refreshContactsSelect(list){
   const sel=$('contactSelect'); if(!sel) return;
   sel.innerHTML='';
@@ -282,7 +286,11 @@ function wireEvents(){
     }catch(e){ console.error(e); alert('Error al descifrar datos'); }
   });
 
-  $('logout')?.addEventListener('click', ()=>{ show('loginView'); const lp=$('loginPass'); if(lp) lp.value=''; });
+  $('logout')?.addEventListener('click', ()=>{
+    show('loginView');
+    const lp=$('loginPass'); if(lp) lp.value='';
+    toggleResetVisibility();  // <-- hace visible "Borrar datos" sin refrescar
+  });
 
   $('btnReset')?.addEventListener('click', ()=>{
     if(confirm('Esto borrará TODA la app (usuario, contactos). ¿Continuar?')){ S.clear(); location.reload(); }
@@ -320,7 +328,6 @@ function wireEvents(){
     window.open(url,'_blank');
   });
 
-  // Enter = enviar/crear
   ['loginUser','loginPass','setupUser','setupPass'].forEach(id=>{
     const el=$(id); el&&el.addEventListener('keydown',e=>{
       if(e.key==='Enter'){ (id.startsWith('login')?$('btnLogin'):$('btnSetup'))?.click(); }
@@ -331,14 +338,12 @@ function wireEvents(){
 function init(){
   const state=S.state();
   show(state? 'loginView' : 'setupView');
-  // Mostrar/ocultar "Borrar datos" solo si ya hay registro
-  const reset=$('btnReset'); if(reset) reset.style.display = state ? 'inline-flex' : 'none';
+  toggleResetVisibility();
   setDefaultDate(); updateMessage(); wireEvents();
 }
 document.addEventListener('DOMContentLoaded', init);
 </script>
 
-<!-- PWA: registrar Service Worker -->
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
