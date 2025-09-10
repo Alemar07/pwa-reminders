@@ -16,7 +16,6 @@
     --violet:#5e5bff; --cyan:#10b5ff;
     --ink:#0b1220; --line: rgba(94,91,255,.22);
     --glassA: rgba(255,255,255,.86); --glassB: rgba(255,255,255,.82);
-    --mainMin: 70vh; /* calculado por JS */
   }
   body{
     height:100%; margin:0; overflow-x:hidden;
@@ -52,18 +51,16 @@
   .subtitle{margin:2px 0 0; font-size:clamp(12px, 2.4vw, 14px); color:#475569}
   .hr{height:1px; background:var(--line); margin:10px 0 0}
 
-  /* Main: flex centering (estable) y scroll nativo */
+  /* Main: contenido pegado arriba, responsive y con scroll nativo */
   .main{
-    min-height: var(--mainMin);
-    display:flex; align-items:center; justify-content:center;
-    padding: clamp(8px, 3vh, 24px) max(16px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-right));
+    display:block;
+    padding: 16px max(16px, env(safe-area-inset-left)) calc(20px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-right));
     overflow-y:auto; -webkit-overflow-scrolling:touch;
-    transform: translateZ(0); /* evita “shifts” durante repaint en iOS */
   }
 
   .stage{ display:none; width:100%; }
-  .stage-inner{ width:100%; max-width:600px; margin-inline:auto; display:grid; gap:28px; }
-  .row{ display:grid; grid-template-columns:1fr; gap:18px }
+  .stage-inner{ width:100%; max-width:600px; margin: 10px auto 0 auto; display:grid; gap:24px; }
+  .row{ display:grid; grid-template-columns:1fr; gap:16px }
 
   .field{ position:relative; }
   .field input, .field select, .field textarea, .field [type="datetime-local"]{
@@ -252,7 +249,6 @@ function show(id){
   else { setHeaderTitle('Iniciar sesión'); }
   if(id==='loginView'){ toggleResetVisibility(); }
   if(id==='setupView'){ const r=$('btnReset'); if(r) r.style.display='none'; }
-  recalcMainHeight();
 }
 
 function refreshContactsSelect(list){
@@ -350,21 +346,10 @@ function wireEvents(){
   });
 }
 
-function recalcMainHeight(){
-  const header = document.querySelector('.auth-head');
-  const hr = document.querySelector('.hr');
-  const used = (header?.offsetHeight||0) + (hr?.offsetHeight||0);
-  const vh = (window.visualViewport ? visualViewport.height : window.innerHeight) || window.innerHeight;
-  const min = Math.max(200, vh - used);
-  document.documentElement.style.setProperty('--mainMin', min + 'px');
-}
-
 function init(){
   const state=S.state();
   show(state? 'loginView' : 'setupView');
-  toggleResetVisibility();
   setDefaultDate(); updateMessage(); wireEvents();
-  recalcMainHeight();
 }
 document.addEventListener('DOMContentLoaded', init);
 </script>
