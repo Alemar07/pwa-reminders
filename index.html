@@ -9,63 +9,83 @@
 <link rel="icon" href="icons/icon-192.png" sizes="192x192">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>
+  /* ===== Reset y tokens ===== */
+  *, *::before, *::after { box-sizing: border-box; }
   :root{
     --bg1:#0b0e1a; --bg2:#11162a; --bg3:#0c2242;
     --violet:#5e5bff; --cyan:#10b5ff;
     --ink:#0b1220; --muted:#6b7280; --line: rgba(94,91,255,.22);
+    --glassA: rgba(255,255,255,.86); --glassB: rgba(255,255,255,.82);
   }
   html,body{height:100%}
   body{
-    margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial;
+    margin:0; overflow-x:hidden;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial;
     background:
       radial-gradient(900px 500px at 10% -10%, rgba(16,181,255,.25), transparent 60%),
       radial-gradient(1100px 600px at 90% 0%, rgba(94,91,255,.28), transparent 65%),
       linear-gradient(180deg, var(--bg3), var(--bg2) 55%, var(--bg1));
     min-height:100dvh;
   }
-  .wrap{min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:clamp(12px,3vw,24px);}
+  /* ===== Contenedor a pantalla completa ===== */
+  .wrap{min-height:100dvh; display:flex; align-items:stretch; justify-content:center; padding:0}
   .card{
-    width:min(920px,100%);
-    min-height:clamp(560px,90dvh,900px);
-    background: linear-gradient(180deg, rgba(255,255,255,.86), rgba(255,255,255,.82));
-    border:1px solid rgba(255,255,255,.55);
-    border-radius:28px;
-    box-shadow: 0 40px 100px rgba(0,0,0,.35), 0 30px 70px rgba(94,91,255,.22);
-    display:flex; flex-direction:column; overflow:hidden;
+    width:min(980px, 100%);
+    min-height:100dvh; /* ocupa toda la pantalla SIEMPRE */
+    background: linear-gradient(180deg, var(--glassA), var(--glassB));
+    border:0; border-radius:0;  /* móvil: ocupa toda la pantalla */
+    box-shadow:none;
+    display:flex; flex-direction:column; overflow:auto;
   }
-  @media (max-width:860px){ .card{min-height:100svh; border-radius:0} }
-  .shell{flex:1; display:flex; flex-direction:column;}
-  .auth-head{ display:flex; align-items:center; gap:12px; padding:22px 22px 10px}
+  @supports (height: 100svh) {
+    .wrap{min-height:100svh}
+    .card{min-height:100svh}
+  }
+  @media (min-width:900px){
+    .wrap{padding:24px}
+    .card{min-height:calc(100dvh - 48px); border-radius:28px; box-shadow: 0 40px 100px rgba(0,0,0,.35), 0 30px 70px rgba(94,91,255,.22);}
+    @supports (height: 100svh) { .card{min-height:calc(100svh - 48px)} }
+  }
+
+  /* ===== Cabecera ===== */
+  .auth-head{ display:flex; align-items:center; gap:12px; padding:24px max(20px, env(safe-area-inset-left)) 8px max(20px, env(safe-area-inset-right)); }
   .logo{ width:46px; height:46px; border-radius:12px; color:#fff; font-weight:800; display:grid; place-items:center;
          background:linear-gradient(135deg, var(--cyan), var(--violet));
-         box-shadow: 0 10px 30px rgba(16,181,255,.25); }
-  .title{margin:0; font-size:24px; color:var(--ink)}
-  .subtitle{margin:2px 0 0; font-size:13px; color:#475569}
-  .hr{height:1px; background:var(--line); margin:10px 22px 0}
-  .pane{ padding:18px 22px 16px; }
+         box-shadow: 0 10px 30px rgba(16,181,255,.25); flex:0 0 auto; }
+  .title{margin:0; font-size:clamp(22px, 3.8vw, 28px); color:var(--ink)}
+  .subtitle{margin:2px 0 0; font-size:clamp(12px, 2.4vw, 14px); color:#475569}
+  .hr{height:1px; background:var(--line); margin:10px 0 0}
+
+  /* ===== Áreas de contenido con ancho máximo suave ===== */
+  .pane{ padding:18px 16px; }
+  .container{ width:100%; max-width:600px; margin-inline:auto; }     /* limita ancho en móvil y desktop */
   .row{ display:grid; grid-template-columns:1fr; gap:14px }
   .field{ position:relative; }
   .field input, .field select, .field textarea, .field [type="datetime-local"]{
     width:100%; border:1px solid rgba(94,91,255,.24); border-radius:18px;
-    padding:14px 48px 14px 44px; background:rgba(255,255,255,.9);
-    font-size:15px; color:var(--ink); outline:none;
+    padding:14px 48px 14px 44px; background:rgba(255,255,255,.94);
+    font-size:16px; color:var(--ink); outline:none;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 10px 24px rgba(94,91,255,.08);
   }
+  .field textarea{ min-height:120px; resize:vertical; overflow:auto; }
   .field input::placeholder, .field textarea::placeholder{ color:#9aa3af }
   .icon-left, .icon-right{ position:absolute; top:50%; transform:translateY(-50%); width:22px; height:22px; opacity:.7 }
   .icon-left{ left:14px } .icon-right{ right:14px; cursor:pointer }
+  label{ display:block; font-size:16px; color:#374151; margin:6px 0 8px; font-weight:700 }
+
   .btn{
     display:inline-flex; align-items:center; justify-content:center; gap:10px;
-    border:none; cursor:pointer; border-radius:18px; font-weight:700; color:white;
-    padding:14px 16px; width:100%;
+    border:none; cursor:pointer; border-radius:22px; font-weight:800; color:white;
+    padding:16px 18px; width:100%;
     background: linear-gradient(90deg, var(--cyan), var(--violet));
-    box-shadow: 0 12px 34px rgba(16,181,255,.28), 0 12px 34px rgba(94,91,255,.28);
+    box-shadow: 0 18px 34px rgba(16,181,255,.28), 0 18px 34px rgba(94,91,255,.28);
+    letter-spacing:.2px;
   }
-  label{ display:block; font-size:14px; color:#334155; margin:6px 0 8px; font-weight:600 }
-  textarea{ resize:vertical; min-height:110px }
+
+  /* ===== App: secciones y grid ===== */
   .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:16px }
-  @media (max-width:860px){ .grid2{ grid-template-columns:1fr } }
-  .section{ padding:10px 22px 2px }
+  @media (max-width:720px){ .grid2{ grid-template-columns:1fr } }
+  .section{ padding:10px 16px 0 }
   .contact-block{
     background:linear-gradient(180deg, rgba(246,247,255,.9), rgba(243,246,255,.85));
     border:1px solid rgba(94,91,255,.22); border-radius:18px; padding:16px;
@@ -73,28 +93,31 @@
   }
   .btn-outline{ border:1px solid rgba(94,91,255,.35); background:#fff; color:#1f2a44; }
   .btn-danger{ background:linear-gradient(90deg,#ff6b6b,#ef4444); color:#fff; border:none }
-  .footer{ padding:16px 22px 22px; display:flex; justify-content:center; gap:18px; align-items:center }
-  .chip{ padding:8px 12px; border-radius:999px; background:rgba(241,245,255,.9); border:1px solid rgba(94,91,255,.24); font-size:12px; color:#0b1220 }
-  .logout{ color:#ef4444; text-decoration:underline; cursor:pointer; font-weight:600 }
+
+  /* ===== Footer centrado ===== */
+  .footer{ padding:16px max(16px, env(safe-area-inset-left)) calc(16px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-right));
+           display:flex; justify-content:center; gap:18px; align-items:center }
+  .chip{ padding:8px 12px; border-radius:999px; background:rgba(241,245,255,.9); border:1px solid rgba(94,91,255,.24); font-size:14px; color:#0b1220 }
+  .logout{ color:#ef4444; text-decoration:underline; cursor:pointer; font-weight:700 }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="card">
-    <div class="shell">
 
-      <!-- Cabecera -->
-      <div class="auth-head">
-        <div class="logo">MF</div>
-        <div>
-          <h1 class="title">Iniciar sesión</h1>
-          <p class="subtitle">MF Gestor de Citas</p>
-        </div>
+    <!-- Cabecera -->
+    <div class="auth-head container">
+      <div class="logo">MF</div>
+      <div style="min-width:0">
+        <h1 class="title">Iniciar sesión</h1>
+        <p class="subtitle">MF Gestor de Citas</p>
       </div>
-      <div class="hr"></div>
+    </div>
+    <div class="hr"></div>
 
-      <!-- SETUP (primer uso) -->
-      <div id="setupView" class="pane" style="display:none">
+    <!-- SETUP (primer uso) -->
+    <div id="setupView" class="pane">
+      <div class="container">
         <div class="row">
           <div class="field">
             <svg class="icon-left" viewBox="0 0 24 24" fill="none"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5.33 0-8 2.67-8 6v1h16v-1c0-3.33-2.67-6-8-6Z" fill="currentColor"/></svg>
@@ -110,9 +133,11 @@
           <button id="btnSetup" class="btn" type="button">Crear y acceder</button>
         </div>
       </div>
+    </div>
 
-      <!-- LOGIN -->
-      <div id="loginView" class="pane" style="display:none">
+    <!-- LOGIN -->
+    <div id="loginView" class="pane" style="display:none">
+      <div class="container">
         <div class="row">
           <div class="field">
             <svg class="icon-left" viewBox="0 0 24 24" fill="none"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5.33 0-8 2.67-8 6v1h16v-1c0-3.33-2.67-6-8-6Z" fill="currentColor"/></svg>
@@ -129,54 +154,54 @@
           <button id="btnReset" class="btn" type="button" style="display:none;background:transparent;color:#0b1220;border:1px dashed rgba(94,91,255,.35)">Borrar datos de la app</button>
         </div>
       </div>
+    </div>
 
-      <!-- APP -->
-      <div id="appView" style="display:none">
-        <div class="section grid2">
+    <!-- APP -->
+    <div id="appView" style="display:none">
+      <div class="section">
+        <div class="container grid2">
           <div>
             <label>Fecha y hora del recordatorio</label>
             <div class="field"><input id="dt" type="datetime-local" /></div>
           </div>
           <div>
             <label>Contacto</label>
-            <div class="field" style="padding-right:0"><select id="contactSelect"></select></div>
+            <div class="field"><select id="contactSelect"></select></div>
           </div>
-        </div>
-
-        <div class="section" style="padding-top:8px">
-          <label>Mensaje a enviar</label>
-          <div class="field" style="padding-right:0">
-            <textarea id="msg" rows="4" placeholder="Se generará automáticamente, pero puedes editarlo."></textarea>
-          </div>
-        </div>
-
-        <div class="section" style="padding-top:6px">
-          <div class="row">
-            <button id="btnSend" class="btn" type="button">Enviar por WhatsApp</button>
-          </div>
-        </div>
-
-        <div class="section" style="padding-top:2px">
-          <div class="contact-block">
-            <label style="margin-top:0">Gestionar contactos</label>
-            <div class="grid2">
-              <div class="field" style="padding-right:0"><input id="newName" placeholder="Nombre" /></div>
-              <div class="field" style="padding-right:0"><input id="newPhone" placeholder="+34600111222" /></div>
-            </div>
-            <div style="display:flex; gap:12px; margin-top:12px; flex-wrap:wrap">
-              <button id="btnAdd" class="btn btn-outline" type="button">Añadir contacto</button>
-              <button id="btnRemove" class="btn btn-danger" type="button">Eliminar contacto</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="footer">
-          <span id="who" class="chip">Conectado: —</span>
-          <span id="logout" class="logout" style="display:none">Cerrar sesión</span>
         </div>
       </div>
 
+      <div class="section">
+        <div class="container">
+          <label>Mensaje a enviar</label>
+          <div class="field"><textarea id="msg" rows="4" placeholder="Se generará automáticamente, pero puedes editarlo."></textarea></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="container"><button id="btnSend" class="btn" type="button">Enviar por WhatsApp</button></div>
+      </div>
+
+      <div class="section">
+        <div class="container contact-block">
+          <label style="margin-top:0">Gestionar contactos</label>
+          <div class="grid2">
+            <div class="field"><input id="newName" placeholder="Nombre" /></div>
+            <div class="field"><input id="newPhone" placeholder="+34600111222" /></div>
+          </div>
+          <div style="display:flex; gap:12px; margin-top:12px; flex-wrap:wrap">
+            <button id="btnAdd" class="btn btn-outline" type="button">Añadir contacto</button>
+            <button id="btnRemove" class="btn btn-danger" type="button">Eliminar contacto</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <span id="who" class="chip">Conectado: —</span>
+        <span id="logout" class="logout" style="display:none">Cerrar sesión</span>
+      </div>
     </div>
+
   </div>
 </div>
 
@@ -194,7 +219,7 @@ const ubuf = s => Uint8Array.from(atob(s), c=>c.charCodeAt(0)).buffer;
 function setDefaultDate(){
   const d=new Date(Date.now()+60*60*1000);
   const iso=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
-  const el=$('dt'); if(el) el.value=iso;
+  $('dt') && ($('dt').value=iso);
 }
 async function derive(password, saltB64){
   const salt=saltB64?ubuf(saltB64):crypto.getRandomValues(new Uint8Array(16)).buffer;
@@ -209,7 +234,7 @@ async function encryptJson(aesKey,obj){ const iv=crypto.getRandomValues(new Uint
 async function decryptJson(aesKey,pack){ const iv=ubuf(pack.iv), ct=ubuf(pack.ct); const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(iv)},aesKey,ct); return JSON.parse(new TextDecoder().decode(pt)); }
 function show(id){
   ['setupView','loginView','appView'].forEach(v=>{ const el=$(v); if(el) el.style.display=(v===id?'block':'none'); });
-  const l=$('logout'); if(l) l.style.display=(id==='appView')?'inline':'none';
+  $('logout') && ($('logout').style.display = id==='appView' ? 'inline' : 'none');
 }
 function refreshContactsSelect(list){
   const sel=$('contactSelect'); if(!sel) return;
@@ -232,19 +257,19 @@ function wireEvents(){
   $('toggleSetup')?.addEventListener('click', ()=>toggle('setupPass'));
 
   $('btnSetup')?.addEventListener('click', async ()=>{
-    const user=$('setupUser').value.trim(); const pass=$('setupPass').value;
+    const user=$('setupUser').value.trim(), pass=$('setupPass').value;
     if(!user || pass.length<6){ alert('Usuario y contraseña (>=6) requeridos'); return; }
     try{
       const r=await derive(pass); S.key=r.aesKey; S.user=user;
       const pack=await encryptJson(S.key,{list:[]});
       S.save({user, pwHashB64:r.pwHashB64, saltB64:r.saltB64, vault:pack});
-      const who=$('who'); if(who) who.textContent=`Conectado: ${user}`;
+      $('who') && ($('who').textContent=`Conectado: ${user}`);
       refreshContactsSelect([]); show('appView');
     }catch(e){ console.error(e); alert('Error creando el almacén'); }
   });
 
   $('btnLogin')?.addEventListener('click', async ()=>{
-    const user=$('loginUser').value.trim(); const pass=$('loginPass').value;
+    const user=$('loginUser').value.trim(), pass=$('loginPass').value;
     const state=S.state(); if(!state){ show('setupView'); return; }
     if(user!==state.user){ alert('Usuario incorrecto'); return; }
     try{
@@ -252,7 +277,7 @@ function wireEvents(){
       if(r.pwHashB64!==state.pwHashB64){ alert('Contraseña incorrecta'); return; }
       const vault=await decryptJson(r.aesKey, state.vault);
       S.key=r.aesKey; S.user=user;
-      const who=$('who'); if(who) who.textContent=`Conectado: ${user}`;
+      $('who') && ($('who').textContent=`Conectado: ${user}`);
       refreshContactsSelect(vault.list); show('appView');
     }catch(e){ console.error(e); alert('Error al descifrar datos'); }
   });
@@ -267,7 +292,7 @@ function wireEvents(){
   const saveVault = async v=>{ const pack=await encryptJson(S.key,v); const st=S.state(); st.vault=pack; S.save(st); };
 
   $('btnAdd')?.addEventListener('click', async ()=>{
-    const name=$('newName').value.trim(); const phone=$('newPhone').value.trim();
+    const name=$('newName').value.trim(), phone=$('newPhone').value.trim();
     if(!name || !isPhoneValid(phone)){ alert('Nombre y teléfono válido (+ prefijo) requeridos'); return; }
     const vault=await loadVault();
     if(vault.list.some(c=>c.phone===phone)){ alert('Ese teléfono ya existe'); return; }
@@ -313,7 +338,7 @@ function init(){
 document.addEventListener('DOMContentLoaded', init);
 </script>
 
-<!-- PWA: registrar Service Worker (sin cambios) -->
+<!-- PWA: registrar Service Worker -->
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
