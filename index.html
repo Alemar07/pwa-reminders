@@ -15,7 +15,8 @@
     --violet:#5e5bff; --cyan:#10b5ff;
     --ink:#0b1220; --line: rgba(94,91,255,.22);
     --glassA: rgba(255,255,255,.86); --glassB: rgba(255,255,255,.82);
-    --mainMin: 70vh; /* fallback */
+    --mainMin: 70vh; /* calculado por JS */
+    --lift: 0px;     /* calculado por JS: 10% del viewport */
   }
   html,body{height:100%}
   body{
@@ -52,26 +53,27 @@
   .subtitle{margin:2px 0 0; font-size:clamp(12px, 2.4vw, 14px); color:#475569}
   .hr{height:1px; background:var(--line); margin:10px 0 0}
 
-  /* Main: height computed via JS, content centered */
+  /* Main: centrado y altura dinámica */
   .main{
     min-height: var(--mainMin);
-    display:grid; place-content:center; /* centro verdadero */
+    display:grid; place-content:center;
     padding: clamp(8px, 3vh, 24px) max(16px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-right));
   }
   .stage{ display:none; width:100%; }
-  .stage-inner{ width:100%; max-width:600px; margin-inline:auto; display:grid; gap:22px; }
+  .stage-inner{ width:100%; max-width:600px; margin-inline:auto; display:grid; gap:28px; } /* + espacio */
+  .row{ display:grid; grid-template-columns:1fr; gap:18px } /* + espacio */
+  .offset-up{ transform: translateY(calc(-1 * var(--lift))); transition: transform .2s ease-out; }
 
-  .row{ display:grid; grid-template-columns:1fr; gap:14px }
   .field{ position:relative; }
   .field input, .field select, .field textarea, .field [type="datetime-local"]{
     width:100%; border:1px solid rgba(94,91,255,.24); border-radius:18px;
-    padding:14px 48px 14px 44px; background:rgba(255,255,255,.94);
+    padding:16px 48px 16px 44px; background:rgba(255,255,255,.94);
     font-size:16px; color:var(--ink); outline:none;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 10px 24px rgba(94,91,255,.08);
   }
-  .field select, .field input[type="datetime-local"]{ min-height:52px; }
+  .field select, .field input[type="datetime-local"]{ min-height:56px; } /* + alto */
   .field input[type="datetime-local"]{ -webkit-appearance:none; appearance:none; }
-  .field textarea{ min-height:120px; resize:vertical; overflow:auto; }
+  .field textarea{ min-height:130px; resize:vertical; overflow:auto; }
   .icon-left, .icon-right{ position:absolute; top:50%; transform:translateY(-50%); width:22px; height:22px; opacity:.7 }
   .icon-left{ left:14px } .icon-right{ right:14px; cursor:pointer }
   label{ display:block; font-size:16px; color:#374151; margin:6px 0 8px; font-weight:700 }
@@ -79,25 +81,25 @@
   .btn{
     display:inline-flex; align-items:center; justify-content:center; gap:10px;
     border:none; cursor:pointer; border-radius:22px; font-weight:800; color:white;
-    padding:16px 18px; width:100%;
+    padding:18px 18px; width:100%;
     background: linear-gradient(90deg, var(--cyan), var(--violet));
     box-shadow: 0 18px 34px rgba(16,181,255,.28), 0 18px 34px rgba(94,91,255,.28);
     letter-spacing:.2px;
   }
 
-  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:16px }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:18px }
   @media (max-width:720px){ .grid2{ grid-template-columns:1fr } }
-  .section{ padding:10px 0 0 }
+  .section{ padding:12px 0 0 }
   .container{ width:100%; max-width:600px; margin-inline:auto; padding-inline:max(16px, env(safe-area-inset-left)); padding-right:max(16px, env(safe-area-inset-right)); }
   .contact-block{
     background:linear-gradient(180deg, rgba(246,247,255,.9), rgba(243,246,255,.85));
-    border:1px solid rgba(94,91,255,.22); border-radius:18px; padding:16px;
+    border:1px solid rgba(94,91,255,.22); border-radius:18px; padding:18px;
     box-shadow: 0 10px 26px rgba(94,91,255,.08);
   }
   .btn-outline{ border:1px solid rgba(94,91,255,.35); background:#fff; color:#1f2a44; }
   .btn-danger{ background:linear-gradient(90deg,#ff6b6b,#ef4444); color:#fff; border:none }
 
-  .footer{ padding:16px max(16px, env(safe-area-inset-left)) calc(16px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-right));
+  .footer{ padding:18px max(16px, env(safe-area-inset-left)) calc(16px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-right));
            display:flex; justify-content:center; gap:18px; align-items:center }
   .chip{ padding:8px 12px; border-radius:999px; background:rgba(241,245,255,.9); border:1px solid rgba(94,91,255,.24); font-size:14px; color:#0b1220 }
   .logout{ color:#ef4444; text-decoration:underline; cursor:pointer; font-weight:700 }
@@ -121,7 +123,7 @@
     <div id="main" class="main">
       <!-- SETUP -->
       <section id="setupView" class="stage">
-        <div class="stage-inner">
+        <div class="stage-inner offset-up">
           <div class="row">
             <div class="field">
               <svg class="icon-left" viewBox="0 0 24 24" fill="none"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5.33 0-8 2.67-8 6v1h16v-1c0-3.33-2.67-6-8-6Z" fill="currentColor"/></svg>
@@ -141,7 +143,7 @@
 
       <!-- LOGIN -->
       <section id="loginView" class="stage">
-        <div class="stage-inner">
+        <div class="stage-inner offset-up">
           <div class="row">
             <div class="field">
               <svg class="icon-left" viewBox="0 0 24 24" fill="none"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5.33 0-8 2.67-8 6v1h16v-1c0-3.33-2.67-6-8-6Z" fill="currentColor"/></svg>
@@ -248,6 +250,7 @@ function show(id){
   if(id==='loginView'){ toggleResetVisibility(); }
   if(id==='setupView'){ const r=$('btnReset'); if(r) r.style.display='none'; }
   recalcMainHeight();
+  updateLift(); // aplica offset -10%
 }
 
 function refreshContactsSelect(list){
@@ -344,12 +347,14 @@ function wireEvents(){
     });
   });
 
-  // Altura disponible para centrar correctamente (iOS/Android)
   if (window.visualViewport) {
     visualViewport.addEventListener('resize', recalcMainHeight);
+    visualViewport.addEventListener('resize', updateLift);
   }
   window.addEventListener('resize', recalcMainHeight);
   window.addEventListener('orientationchange', recalcMainHeight);
+  window.addEventListener('resize', updateLift);
+  window.addEventListener('orientationchange', updateLift);
 }
 
 function recalcMainHeight(){
@@ -357,8 +362,14 @@ function recalcMainHeight(){
   const hr = document.querySelector('.hr');
   const used = (header?.offsetHeight||0) + (hr?.offsetHeight||0);
   const vh = (window.visualViewport ? visualViewport.height : window.innerHeight) || window.innerHeight;
-  const min = Math.max(200, vh - used); // nunca menos de 200px
+  const min = Math.max(200, vh - used);
   document.documentElement.style.setProperty('--mainMin', min + 'px');
+}
+
+function updateLift(){
+  const vh = (window.visualViewport ? visualViewport.height : window.innerHeight) || window.innerHeight;
+  const lift = Math.round(vh * 0.10); // 10% arriba
+  document.documentElement.style.setProperty('--lift', lift + 'px');
 }
 
 function init(){
@@ -366,7 +377,7 @@ function init(){
   show(state? 'loginView' : 'setupView');
   toggleResetVisibility();
   setDefaultDate(); updateMessage(); wireEvents();
-  recalcMainHeight();
+  recalcMainHeight(); updateLift();
 }
 document.addEventListener('DOMContentLoaded', init);
 </script>
