@@ -58,10 +58,16 @@
     min-height: var(--mainMin);
     display:grid; place-content:center;
     padding: clamp(8px, 3vh, 24px) max(16px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-right));
+    overflow:hidden; /* por defecto sin scroll */
+    scroll-behavior:smooth;
   }
+  /* Cuando teclado está abierto, hacemos scroll y quitamos offset */
+  .kb-open .main{ place-content:start; align-content:start; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .kb-open .offset-up{ transform:none !important; }
+
   .stage{ display:none; width:100%; }
-  .stage-inner{ width:100%; max-width:600px; margin-inline:auto; display:grid; gap:28px; } /* + espacio */
-  .row{ display:grid; grid-template-columns:1fr; gap:18px } /* + espacio */
+  .stage-inner{ width:100%; max-width:600px; margin-inline:auto; display:grid; gap:28px; }
+  .row{ display:grid; grid-template-columns:1fr; gap:18px }
   .offset-up{ transform: translateY(calc(-1 * var(--lift))); transition: transform .2s ease-out; }
 
   .field{ position:relative; }
@@ -70,8 +76,9 @@
     padding:16px 48px 16px 44px; background:rgba(255,255,255,.94);
     font-size:16px; color:var(--ink); outline:none;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 10px 24px rgba(94,91,255,.08);
+    scroll-margin-top: 120px; /* al hacer scrollIntoView queda visible sobre el teclado */
   }
-  .field select, .field input[type="datetime-local"]{ min-height:56px; } /* + alto */
+  .field select, .field input[type="datetime-local"]{ min-height:56px; }
   .field input[type="datetime-local"]{ -webkit-appearance:none; appearance:none; }
   .field textarea{ min-height:130px; resize:vertical; overflow:auto; }
   .icon-left, .icon-right{ position:absolute; top:50%; transform:translateY(-50%); width:22px; height:22px; opacity:.7 }
@@ -250,7 +257,7 @@ function show(id){
   if(id==='loginView'){ toggleResetVisibility(); }
   if(id==='setupView'){ const r=$('btnReset'); if(r) r.style.display='none'; }
   recalcMainHeight();
-  updateLift(); // aplica offset -10%
+  updateLift();
 }
 
 function refreshContactsSelect(list){
@@ -347,14 +354,44 @@ function wireEvents(){
     });
   });
 
-  if (window.visualViewport) {
-    visualViewport.addEventListener('resize', recalcMainHeight);
-    visualViewport.addEventListener('resize', updateLift);
+  // ===== Teclado iOS: detectar y ajustar =====
+  function isKbdOpen(){
+    const base = window.innerHeight || document.documentElement.clientHeight;
+    const vh = (window.visualViewport ? visualViewport.height : base);
+    return (base - vh) > 150; // heurística
   }
-  window.addEventListener('resize', recalcMainHeight);
-  window.addEventListener('orientationchange', recalcMainHeight);
-  window.addEventListener('resize', updateLift);
-  window.addEventListener('orientationchange', updateLift);
+  function onViewportChange(){
+    const open = isKbdOpen();
+    document.body.classList.toggle('kb-open', open);
+    if(open){ document.documentElement.style.setProperty('--lift', '0px'); }
+    else { updateLift(); }
+  }
+  function ensureVisible(el){
+    if(!el) return;
+    setTimeout(()=>{
+      try{ (el.closest('.field')||el).scrollIntoView({block:'center', inline:'nearest', behavior:'smooth'}); }catch(_){}
+    }, 60);
+  }
+  document.addEventListener('focusin', e=>{
+    if(e.target.matches('input, textarea, select')){
+      document.body.classList.add('kb-open');
+      document.documentElement.style.setProperty('--lift','0px');
+      ensureVisible(e.target);
+    }
+  });
+  document.addEventListener('focusout', e=>{
+    if(e.target.matches('input, textarea, select')){
+      // si ningún otro input quedó enfocado, cerramos modo teclado
+      setTimeout(()=>{
+        const a=document.activeElement;
+        if(!a || a===document.body){ document.body.classList.remove('kb-open'); updateLift(); }
+      }, 200);
+    }
+  });
+  if (window.visualViewport) {
+    visualViewport.addEventListener('resize', onViewportChange);
+  }
+  window.addEventListener('orientationchange', onViewportChange);
 }
 
 function recalcMainHeight(){
