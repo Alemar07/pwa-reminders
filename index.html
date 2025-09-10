@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
 <title>MF Gestor de Citas</title>
 <meta name="theme-color" content="#5e5bff">
 <link rel="manifest" href="manifest.webmanifest">
@@ -10,6 +10,7 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>
   *, *::before, *::after { box-sizing: border-box; }
+  html{ height:100%; -webkit-text-size-adjust:100%; }
   :root{
     --bg1:#0b0e1a; --bg2:#11162a; --bg3:#0c2242;
     --violet:#5e5bff; --cyan:#10b5ff;
@@ -17,9 +18,8 @@
     --glassA: rgba(255,255,255,.86); --glassB: rgba(255,255,255,.82);
     --mainMin: 70vh; /* calculado por JS */
   }
-  html,body{height:100%}
   body{
-    margin:0; overflow-x:hidden;
+    height:100%; margin:0; overflow-x:hidden;
     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial;
     background:
       radial-gradient(900px 500px at 10% -10%, rgba(16,181,255,.25), transparent 60%),
@@ -52,17 +52,14 @@
   .subtitle{margin:2px 0 0; font-size:clamp(12px, 2.4vw, 14px); color:#475569}
   .hr{height:1px; background:var(--line); margin:10px 0 0}
 
-  /* Main: centrado estable (horiz/vert), sin offset extra */
+  /* Main: flex centering (estable) y scroll nativo */
   .main{
     min-height: var(--mainMin);
-    display:grid;
-    place-content:center;   /* vertical/horizontal del grid */
-    place-items:center;     /* centra los items (por si hay max-width) */
+    display:flex; align-items:center; justify-content:center;
     padding: clamp(8px, 3vh, 24px) max(16px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-right));
-    overflow:hidden;
-    scroll-behavior:smooth;
+    overflow-y:auto; -webkit-overflow-scrolling:touch;
+    transform: translateZ(0); /* evita “shifts” durante repaint en iOS */
   }
-  .kb-open .main{ place-content:start; place-items:center; overflow-y:auto; -webkit-overflow-scrolling:touch; }
 
   .stage{ display:none; width:100%; }
   .stage-inner{ width:100%; max-width:600px; margin-inline:auto; display:grid; gap:28px; }
@@ -72,7 +69,8 @@
   .field input, .field select, .field textarea, .field [type="datetime-local"]{
     width:100%; border:1px solid rgba(94,91,255,.24); border-radius:18px;
     padding:16px 48px 16px 44px; background:rgba(255,255,255,.94);
-    font-size:16px; color:var(--ink); outline:none;
+    font-size:17px; /* evita auto-zoom iOS */
+    color:var(--ink); outline:none;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 10px 24px rgba(94,91,255,.08);
     scroll-margin-top: 120px;
   }
@@ -350,41 +348,6 @@ function wireEvents(){
       if(e.key==='Enter'){ (id.startsWith('login')?$('btnLogin'):$('btnSetup'))?.click(); }
     });
   });
-
-  // Teclado iOS: modo scroll sin perder centrado horizontal
-  function isKbdOpen(){
-    const base = window.innerHeight || document.documentElement.clientHeight;
-    const vh = (window.visualViewport ? visualViewport.height : base);
-    return (base - vh) > 150;
-  }
-  function onViewportChange(){
-    const open = isKbdOpen();
-    document.body.classList.toggle('kb-open', open);
-  }
-  function ensureVisible(el){
-    if(!el) return;
-    setTimeout(()=>{
-      try{ (el.closest('.field')||el).scrollIntoView({block:'center', inline:'nearest', behavior:'smooth'}); }catch(_){}
-    }, 60);
-  }
-  document.addEventListener('focusin', e=>{
-    if(e.target.matches('input, textarea, select')){
-      document.body.classList.add('kb-open');
-      ensureVisible(e.target);
-    }
-  });
-  document.addEventListener('focusout', e=>{
-    if(e.target.matches('input, textarea, select')){
-      setTimeout(()=>{
-        const a=document.activeElement;
-        if(!a || a===document.body){ document.body.classList.remove('kb-open'); }
-      }, 200);
-    }
-  });
-  if (window.visualViewport) {
-    visualViewport.addEventListener('resize', onViewportChange);
-  }
-  window.addEventListener('orientationchange', onViewportChange);
 }
 
 function recalcMainHeight(){
