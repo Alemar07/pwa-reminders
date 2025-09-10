@@ -32,7 +32,8 @@
     min-height:100dvh;
     background: linear-gradient(180deg, var(--glassA), var(--glassB));
     border:0; border-radius:0; box-shadow:none;
-    display:flex; flex-direction:column; overflow:auto;
+    display:grid; grid-template-rows:auto 1fr; /* header + main */
+    overflow:hidden;
   }
   @supports (height: 100svh) { .wrap{min-height:100svh} .card{min-height:100svh} }
   @media (min-width:900px){
@@ -50,11 +51,12 @@
   .subtitle{margin:2px 0 0; font-size:clamp(12px, 2.4vw, 14px); color:#475569}
   .hr{height:1px; background:var(--line); margin:10px 0 0}
 
-  /* Content areas */
-  .pane{ padding:18px 16px; }
-  .pane.center{ flex:1; display:flex; }
-  .pane.center .container{ margin:auto; padding-bottom:max(16px, env(safe-area-inset-bottom)); }
-  .container{ width:100%; max-width:600px; margin-inline:auto; }
+  /* Main area uses grid to center stages */
+  .main{ min-height:0; display:grid; }
+  .stage{ display:none; }
+  .center-stage{ display:grid; place-items:center; padding: clamp(12px, 4vw, 24px); }
+  .stage-inner{ width:100%; max-width:600px; }
+
   .row{ display:grid; grid-template-columns:1fr; gap:14px }
   .field{ position:relative; }
   .field input, .field select, .field textarea, .field [type="datetime-local"]{
@@ -63,7 +65,6 @@
     font-size:16px; color:var(--ink); outline:none;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 10px 24px rgba(94,91,255,.08);
   }
-  /* Igualar tamaño de fecha y select (iOS/Android) */
   .field select, .field input[type="datetime-local"]{ min-height:52px; }
   .field input[type="datetime-local"]{ -webkit-appearance:none; appearance:none; }
   .field textarea{ min-height:120px; resize:vertical; overflow:auto; }
@@ -82,7 +83,7 @@
 
   .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:16px }
   @media (max-width:720px){ .grid2{ grid-template-columns:1fr } }
-  .section{ padding:10px 16px 0 }
+  .section{ padding:10px max(16px, env(safe-area-inset-left)) 0 max(16px, env(safe-area-inset-right)) }
   .contact-block{
     background:linear-gradient(180deg, rgba(246,247,255,.9), rgba(243,246,255,.85));
     border:1px solid rgba(94,91,255,.22); border-radius:18px; padding:16px;
@@ -95,108 +96,114 @@
            display:flex; justify-content:center; gap:18px; align-items:center }
   .chip{ padding:8px 12px; border-radius:999px; background:rgba(241,245,255,.9); border:1px solid rgba(94,91,255,.24); font-size:14px; color:#0b1220 }
   .logout{ color:#ef4444; text-decoration:underline; cursor:pointer; font-weight:700 }
+  .container{ width:100%; max-width:600px; margin-inline:auto; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="card">
 
+    <!-- Header -->
     <div class="auth-head container">
       <div class="logo">MF</div>
       <div style="min-width:0">
-        <h1 class="title">Iniciar sesión</h1>
+        <h1 id="hdrTitle" class="title">Iniciar sesión</h1>
         <p class="subtitle">MF Gestor de Citas</p>
       </div>
     </div>
     <div class="hr"></div>
 
-    <!-- SETUP -->
-    <div id="setupView" class="pane center" style="display:none">
-      <div class="container">
-        <div class="row">
-          <div class="field">
-            <svg class="icon-left" viewBox="0 0 24 24" fill="none"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5.33 0-8 2.67-8 6v1h16v-1c0-3.33-2.67-6-8-6Z" fill="currentColor"/></svg>
-            <input id="setupUser" placeholder="Usuario" autocomplete="username">
+    <!-- Main -->
+    <div class="main">
+
+      <!-- SETUP -->
+      <section id="setupView" class="stage center-stage">
+        <div class="stage-inner">
+          <div class="row">
+            <div class="field">
+              <svg class="icon-left" viewBox="0 0 24 24" fill="none"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5.33 0-8 2.67-8 6v1h16v-1c0-3.33-2.67-6-8-6Z" fill="currentColor"/></svg>
+              <input id="setupUser" placeholder="Usuario" autocomplete="username">
+            </div>
+            <div class="field">
+              <svg class="icon-left" viewBox="0 0 24 24" fill="none"><path d="M12 12a3 3 0 0 0-3 3v3h6v-3a3 3 0 0 0-3-3Zm0-7a5 5 0 0 1 5 5v3H7V10a5 5 0 0 1 5-5Z" fill="currentColor"/></svg>
+              <input id="setupPass" type="password" placeholder="Contraseña" autocomplete="new-password">
+              <svg id="toggleSetup" class="icon-right" viewBox="0 0 24 24" fill="none"><path d="M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7Zm0 12a5 5 0 1 1 5-5 5 5 0 0 1-5 5Z" fill="currentColor"/></svg>
+            </div>
           </div>
-          <div class="field">
-            <svg class="icon-left" viewBox="0 0 24 24" fill="none"><path d="M12 12a3 3 0 0 0-3 3v3h6v-3a3 3 0 0 0-3-3Zm0-7a5 5 0 0 1 5 5v3H7V10a5 5 0 0 1 5-5Z" fill="currentColor"/></svg>
-            <input id="setupPass" type="password" placeholder="Contraseña" autocomplete="new-password">
-            <svg id="toggleSetup" class="icon-right" viewBox="0 0 24 24" fill="none"><path d="M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7Zm0 12a5 5 0 1 1 5-5 5 5 0 0 1-5 5Z" fill="currentColor"/></svg>
+          <div class="row" style="margin-top:6px">
+            <button id="btnSetup" class="btn" type="button">Crear y acceder</button>
           </div>
         </div>
-        <div class="row" style="margin-top:6px">
-          <button id="btnSetup" class="btn" type="button">Crear y acceder</button>
-        </div>
-      </div>
-    </div>
+      </section>
 
-    <!-- LOGIN -->
-    <div id="loginView" class="pane center" style="display:none">
-      <div class="container">
-        <div class="row">
-          <div class="field">
-            <svg class="icon-left" viewBox="0 0 24 24" fill="none"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5.33 0-8 2.67-8 6v1h16v-1c0-3.33-2.67-6-8-6Z" fill="currentColor"/></svg>
-            <input id="loginUser" placeholder="Usuario" autocomplete="username">
+      <!-- LOGIN -->
+      <section id="loginView" class="stage center-stage" style="display:none">
+        <div class="stage-inner">
+          <div class="row">
+            <div class="field">
+              <svg class="icon-left" viewBox="0 0 24 24" fill="none"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5.33 0-8 2.67-8 6v1h16v-1c0-3.33-2.67-6-8-6Z" fill="currentColor"/></svg>
+              <input id="loginUser" placeholder="Usuario" autocomplete="username">
+            </div>
+            <div class="field">
+              <svg class="icon-left" viewBox="0 0 24 24" fill="none"><path d="M12 12a3 3 0 0 0-3 3v3h6v-3a3 3 0 0 0-3-3Zm0-7a5 5 0 0 1 5 5v3H7V10a5 5 0 0 1 5-5Z" fill="currentColor"/></svg>
+              <input id="loginPass" type="password" placeholder="Contraseña" autocomplete="current-password">
+              <svg id="toggleLogin" class="icon-right" viewBox="0 0 24 24" fill="none"><path d="M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7Zm0 12a5 5 0 1 1 5-5 5 5 0 0 1-5 5Z" fill="currentColor"/></svg>
+            </div>
           </div>
-          <div class="field">
-            <svg class="icon-left" viewBox="0 0 24 24" fill="none"><path d="M12 12a3 3 0 0 0-3 3v3h6v-3a3 3 0 0 0-3-3Zm0-7a5 5 0 0 1 5 5v3H7V10a5 5 0 0 1 5-5Z" fill="currentColor"/></svg>
-            <input id="loginPass" type="password" placeholder="Contraseña" autocomplete="current-password">
-            <svg id="toggleLogin" class="icon-right" viewBox="0 0 24 24" fill="none"><path d="M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7Zm0 12a5 5 0 1 1 5-5 5 5 0 0 1-5 5Z" fill="currentColor"/></svg>
-          </div>
-        </div>
-        <div class="row" style="margin-top:6px">
-          <button id="btnLogin" class="btn" type="button">Entrar</button>
-          <button id="btnReset" class="btn" type="button" style="display:none;background:transparent;color:#0b1220;border:1px dashed rgba(94,91,255,.35)">Borrar datos de la app</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- APP -->
-    <div id="appView" style="display:none">
-      <div class="section">
-        <div class="container grid2">
-          <div>
-            <label>Fecha y hora del recordatorio</label>
-            <div class="field"><input id="dt" type="datetime-local" /></div>
-          </div>
-          <div>
-            <label>Contacto</label>
-            <div class="field"><select id="contactSelect"></select></div>
+          <div class="row" style="margin-top:6px">
+            <button id="btnLogin" class="btn" type="button">Entrar</button>
+            <button id="btnReset" class="btn" type="button" style="display:none;background:transparent;color:#0b1220;border:1px dashed rgba(94,91,255,.35)">Borrar datos de la app</button>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div class="section">
-        <div class="container">
-          <label>Mensaje a enviar</label>
-          <div class="field"><textarea id="msg" rows="4" placeholder="Se generará automáticamente, pero puedes editarlo."></textarea></div>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="container"><button id="btnSend" class="btn" type="button">Enviar por WhatsApp</button></div>
-      </div>
-
-      <div class="section">
-        <div class="container contact-block">
-          <label style="margin-top:0">Gestionar contactos</label>
-          <div class="grid2">
-            <div class="field"><input id="newName" placeholder="Nombre" /></div>
-            <div class="field"><input id="newPhone" placeholder="+34600111222" /></div>
-          </div>
-          <div style="display:flex; gap:12px; margin-top:12px; flex-wrap:wrap">
-            <button id="btnAdd" class="btn btn-outline" type="button">Añadir contacto</button>
-            <button id="btnRemove" class="btn btn-danger" type="button">Eliminar contacto</button>
+      <!-- APP -->
+      <section id="appView" class="stage" style="display:none">
+        <div class="section">
+          <div class="container grid2">
+            <div>
+              <label>Fecha y hora del recordatorio</label>
+              <div class="field"><input id="dt" type="datetime-local" /></div>
+            </div>
+            <div>
+              <label>Contacto</label>
+              <div class="field"><select id="contactSelect"></select></div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="footer">
-        <span id="who" class="chip">Conectado: —</span>
-        <span id="logout" class="logout" style="display:none">Cerrar sesión</span>
-      </div>
-    </div>
+        <div class="section">
+          <div class="container">
+            <label>Mensaje a enviar</label>
+            <div class="field"><textarea id="msg" rows="4" placeholder="Se generará automáticamente, pero puedes editarlo."></textarea></div>
+          </div>
+        </div>
 
+        <div class="section">
+          <div class="container"><button id="btnSend" class="btn" type="button">Enviar por WhatsApp</button></div>
+        </div>
+
+        <div class="section">
+          <div class="container contact-block">
+            <label style="margin-top:0">Gestionar contactos</label>
+            <div class="grid2">
+              <div class="field"><input id="newName" placeholder="Nombre" /></div>
+              <div class="field"><input id="newPhone" placeholder="+34600111222" /></div>
+            </div>
+            <div style="display:flex; gap:12px; margin-top:12px; flex-wrap:wrap">
+              <button id="btnAdd" class="btn btn-outline" type="button">Añadir contacto</button>
+              <button id="btnRemove" class="btn btn-danger" type="button">Eliminar contacto</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <span id="who" class="chip">Conectado: —</span>
+          <span id="logout" class="logout" style="display:none">Cerrar sesión</span>
+        </div>
+      </section>
+
+    </div><!-- /main -->
   </div>
 </div>
 
@@ -227,16 +234,15 @@ async function derive(password, saltB64){
 async function encryptJson(aesKey,obj){ const iv=crypto.getRandomValues(new Uint8Array(12)); const data=new TextEncoder().encode(JSON.stringify(obj)); const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},aesKey,data); return {iv:b64(iv),ct:b64(ct)}; }
 async function decryptJson(aesKey,pack){ const iv=ubuf(pack.iv), ct=ubuf(pack.ct); const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(iv)},aesKey,ct); return JSON.parse(new TextDecoder().decode(pt)); }
 
-function toggleResetVisibility(){
-  const reset=$('btnReset');
-  if(!reset) return;
-  reset.style.display = S.state() ? 'inline-flex' : 'none';
-}
+function setHeaderTitle(t){ const h=$('hdrTitle'); if(h) h.textContent=t; }
+function toggleResetVisibility(){ const reset=$('btnReset'); if(reset) reset.style.display = S.state() ? 'inline-flex' : 'none'; }
 
 function show(id){
   ['setupView','loginView','appView'].forEach(v=>{ const el=$(v); if(el) el.style.display=(v===id?'block':'none'); });
   $('logout') && ($('logout').style.display = id==='appView' ? 'inline' : 'none');
-  if(id==='loginView') toggleResetVisibility();
+  if(id==='appView'){ setHeaderTitle('Enviar cita'); }
+  else { setHeaderTitle('Iniciar sesión'); }
+  if(id==='loginView'){ toggleResetVisibility(); }
   if(id==='setupView'){ const r=$('btnReset'); if(r) r.style.display='none'; }
 }
 
@@ -289,7 +295,7 @@ function wireEvents(){
   $('logout')?.addEventListener('click', ()=>{
     show('loginView');
     const lp=$('loginPass'); if(lp) lp.value='';
-    toggleResetVisibility();  // <-- hace visible "Borrar datos" sin refrescar
+    toggleResetVisibility();  // visible sin refrescar
   });
 
   $('btnReset')?.addEventListener('click', ()=>{
