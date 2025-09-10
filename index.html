@@ -3,108 +3,144 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Recordatorios por WhatsApp</title>
-<meta name="theme-color" content="#22c55e">
+<title>MF Gestor de Citas</title>
+<meta name="theme-color" content="#6d6aff">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" sizes="192x192">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>
   :root{
-    --bg:#0f172a; --card:#111827; --muted:#94a3b8; --txt:#e5e7eb; --accent:#22c55e;
-    --danger:#ef4444; --outline:#1f2937;
+    --bg:#0e0b1f;
+    --muted:#475569;
+    --primary:#6d6aff;   /* violeta */
+    --primary2:#12b0e8;  /* cian */
   }
   html,body{height:100%}
-  body{margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial;
-       background: radial-gradient(1200px 600px at 20% -10%, #1f2937 0%, #0b1220 40%, #060a14 100%) fixed;}
-  .wrap{min-height:100%; display:flex; align-items:center; justify-content:center; padding:24px;}
-  .card{width:100%; max-width:680px; background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-        border:1px solid #1f2937; border-radius:20px; box-shadow: 0 8px 40px rgba(0,0,0,.45); overflow:hidden}
-  header{padding:22px 22px 0; display:flex; align-items:center; gap:14px}
-  .logo{width:42px; height:42px; border-radius:10px; background: linear-gradient(135deg,#10b981, #22c55e); display:grid; place-items:center; color:white; font-weight:900}
-  header h1{margin:0; font-size:18px; color:var(--txt)}
-  header p{margin:2px 0 0; color:var(--muted); font-size:12px}
-  .body{padding:22px}
-  .row{display:grid; grid-template-columns:1fr 1fr; gap:14px}
-  @media (max-width:720px){ .row{grid-template-columns:1fr} }
-  label{display:block; font-size:12px; color:var(--muted); margin:6px 0 8px}
-  input, select, button, textarea{
-    width:100%; background:#0b1020; color:var(--txt); border:1px solid var(--outline); border-radius:12px;
-    padding:12px 14px; outline:none; transition:.15s border, .15s transform;
+  body{
+    margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial;
+    background:
+      radial-gradient(1000px 500px at 10% 0%, rgba(18,176,232,.25), transparent 60%),
+      radial-gradient(1200px 600px at 80% 10%, rgba(109,106,255,.35), transparent 70%),
+      linear-gradient(180deg, #0b1020, #0e0b1f 60%);
   }
-  input:focus, select:focus, textarea:focus{ border-color:#334155; box-shadow: 0 0 0 3px rgba(51,65,85,.25)}
-  button{cursor:pointer; font-weight:600}
-  .btn{display:inline-flex; align-items:center; justify-content:center; gap:10px}
-  .btn-primary{ background:linear-gradient(180deg,#22c55e,#16a34a); border:none}
-  .btn-ghost{ background:transparent; border:1px dashed #334155; color:#cbd5e1}
-  .btn-danger{ background:linear-gradient(180deg,#ef4444,#dc2626); border:none}
-  .muted{color:var(--muted); font-size:12px}
-  .hint{margin-top:10px; color:#9ca3af; font-size:12px}
+  .wrap{min-height:100%; display:flex; align-items:center; justify-content:center; padding:28px;}
+  .card{
+    width:100%; max-width:760px; border-radius:28px; overflow:hidden;
+    background: linear-gradient(180deg, rgba(255,255,255,.86), rgba(255,255,255,.82));
+    border:1px solid rgba(255,255,255,.5);
+    box-shadow: 0 40px 120px rgba(109,106,255,.25), 0 10px 40px rgba(18,176,232,.15);
+  }
+  /* --- Cabecera/login --- */
+  .auth{ padding:26px 26px 20px; background: linear-gradient(180deg, rgba(109,106,255,.18), rgba(18,176,232,.12)); }
+  .auth-header{ display:flex; align-items:center; gap:12px; margin-bottom:10px;}
+  .logo{
+    width:44px; height:44px; border-radius:12px;
+    background: linear-gradient(135deg, var(--primary2), var(--primary));
+    display:grid; place-items:center; color:white; font-weight:800;
+    box-shadow: 0 10px 30px rgba(18,176,232,.35);
+  }
+  .title{ margin:0; font-size:22px; color:#0b1220; }
+  .subtitle{ margin:2px 0 0; font-size:13px; color:var(--muted); }
+  .split{ height:1px; background:rgba(99,102,241,.2); margin:16px 0 18px; }
+  .row{ display:grid; grid-template-columns:1fr; gap:14px; }
+  .field{ position:relative; }
+  .field input{
+    width:100%; border:1px solid rgba(109,106,255,.24); padding:14px 48px 14px 44px;
+    border-radius:20px; font-size:15px; color:#0f172a; background: rgba(255,255,255,.8);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 6px 18px rgba(109,106,255,.08); outline:none;
+  }
+  .field input::placeholder{ color:#a3a3b2; }
+  .icon-left, .icon-right{ position:absolute; top:50%; transform:translateY(-50%); width:22px; height:22px; opacity:.7; }
+  .icon-left{ left:14px; } .icon-right{ right:14px; cursor:pointer; }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:10px;
+    border:none; cursor:pointer; border-radius:18px; font-weight:700; color:white;
+    padding:14px 16px; width:100%;
+    background: linear-gradient(90deg, var(--primary2), var(--primary));
+    box-shadow: 0 10px 30px rgba(18,176,232,.25), 0 10px 40px rgba(109,106,255,.25);
+  }
+  .btn-ghost{
+    width:100%; padding:12px 16px; border-radius:16px; border:1px dashed rgba(109,106,255,.35);
+    background: rgba(241,245,255,.7); color:#0b1220; font-weight:600;
+  }
+
+  /* --- App (tras login) con colores a juego --- */
+  .app-body{ padding:22px }
+  label{display:block; font-size:13px; color:#334155; margin:6px 0 8px}
+  select, textarea, input[type="datetime-local"]{
+    width:100%; background:rgba(255,255,255,.9); color:#0f172a;
+    border:1px solid rgba(109,106,255,.24); border-radius:14px;
+    padding:12px 14px; outline:none;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 6px 18px rgba(109,106,255,.08);
+  }
   .footer{padding:14px 22px 22px; display:flex; justify-content:space-between; gap:10px}
-  .tag{display:inline-flex; align-items:center; gap:8px; background:#0b1020; border:1px solid #243044;
-       color:#cbd5e1; border-radius:999px; padding:6px 10px; font-size:12px}
-  .ok{color:#10b981}
-  .err{color:#fca5a5}
-  .split{height:1px; background:#1f2937; margin:16px 0}
-  .pill{display:inline-block; padding:6px 10px; border-radius:999px; background:#0b1020; border:1px solid #1f2937; font-size:12px; color:#cbd5e1}
-  .actions{display:flex; gap:12px; flex-wrap:wrap}
-  .right{display:flex; gap:10px; align-items:center}
-  .danger-link{color:#fca5a5; cursor:pointer; text-decoration:underline; font-size:12px}
-  .center{display:flex; justify-content:center}
+  .tag{display:inline-flex; align-items:center; gap:8px; background:rgba(241,245,255,.9); border:1px solid rgba(109,106,255,.24);
+       color:#0b1220; border-radius:999px; padding:6px 10px; font-size:12px}
+  .ok{color:#16a34a}.err{color:#dc2626}
+  .pill{display:inline-block; padding:6px 10px; border-radius:999px; background:rgba(241,245,255,.9);
+        border:1px solid rgba(109,106,255,.24); font-size:12px; color:#0b1220}
+  .danger-link{color:#dc2626; cursor:pointer; text-decoration:underline; font-size:12px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="card">
-    <header>
-      <div class="logo">WA</div>
-      <div>
-        <h1>Recordatorios por WhatsApp</h1>
-        <p>Privado, sin servidores, 100% gratis</p>
-      </div>
-    </header>
-    <div class="body">
 
-      <!-- Vistas -->
+    <!-- CABECERA + LOGIN/SETUP -->
+    <div class="auth">
+      <div class="auth-header">
+        <div class="logo">MF</div>
+        <div>
+          <h1 class="title">Iniciar sesión</h1>
+          <p class="subtitle">MF Gestor de Citas</p>
+        </div>
+      </div>
+
+      <!-- Primer uso: crear cuenta -->
       <div id="setupView" style="display:none">
         <div class="split"></div>
-        <p class="muted">Primer uso · Crea tu usuario único. La contraseña <b>cifra</b> la libreta de contactos en este navegador.</p>
         <div class="row">
-          <div>
-            <label>Usuario</label>
-            <input id="setupUser" placeholder="ej. admin" autocomplete="username">
+          <div class="field">
+            <svg class="icon-left" viewBox="0 0 24 24" fill="none"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5.33 0-8 2.67-8 6v1h16v-1c0-3.33-2.67-6-8-6Z" fill="currentColor"/></svg>
+            <input id="setupUser" placeholder="Usuario" autocomplete="username">
           </div>
-          <div>
-            <label>Contraseña</label>
-            <input id="setupPass" type="password" placeholder="••••••••" autocomplete="new-password">
+          <div class="field">
+            <svg class="icon-left" viewBox="0 0 24 24" fill="none"><path d="M12 12a3 3 0 0 0-3 3v3h6v-3a3 3 0 0 0-3-3Zm0-7a5 5 0 0 1 5 5v3H7V10a5 5 0 0 1 5-5Z" fill="currentColor"/></svg>
+            <input id="setupPass" type="password" placeholder="Contraseña" autocomplete="new-password">
+            <svg id="toggleSetup" class="icon-right" viewBox="0 0 24 24" fill="none"><path d="M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7Zm0 12a5 5 0 1 1 5-5 5 5 0 0 1-5 5Z" fill="currentColor"/></svg>
           </div>
         </div>
-        <div class="actions" style="margin-top:14px">
-          <button id="btnSetup" class="btn btn-primary" type="button">Crear y acceder</button>
+        <div class="row" style="margin-top:6px">
+          <button id="btnSetup" class="btn" type="button">Crear y acceder →</button>
+          <button id="btnReset" class="btn-ghost" type="button">Borrar datos de la app</button>
         </div>
-        <p class="hint">Todo se guarda localmente y cifrado (AES-GCM + PBKDF2). Si olvidas la contraseña, los contactos no se podrán recuperar.</p>
       </div>
 
+      <!-- Login normal -->
       <div id="loginView" style="display:none">
         <div class="split"></div>
         <div class="row">
-          <div>
-            <label>Usuario</label>
-            <input id="loginUser" placeholder="Tu usuario" autocomplete="username">
+          <div class="field">
+            <svg class="icon-left" viewBox="0 0 24 24" fill="none"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5.33 0-8 2.67-8 6v1h16v-1c0-3.33-2.67-6-8-6Z" fill="currentColor"/></svg>
+            <input id="loginUser" placeholder="Usuario" autocomplete="username">
           </div>
-          <div>
-            <label>Contraseña</label>
-            <input id="loginPass" type="password" placeholder="Tu contraseña" autocomplete="current-password">
+          <div class="field">
+            <svg class="icon-left" viewBox="0 0 24 24" fill="none"><path d="M12 12a3 3 0 0 0-3 3v3h6v-3a3 3 0 0 0-3-3Zm0-7a5 5 0 0 1 5 5v3H7V10a5 5 0 0 1 5-5Z" fill="currentColor"/></svg>
+            <input id="loginPass" type="password" placeholder="Contraseña" autocomplete="current-password">
+            <svg id="toggleLogin" class="icon-right" viewBox="0 0 24 24" fill="none"><path d="M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7Zm0 12a5 5 0 1 1 5-5 5 5 0 0 1-5 5Z" fill="currentColor"/></svg>
           </div>
         </div>
-        <div class="actions" style="margin-top:14px">
-          <button id="btnLogin" class="btn btn-primary" type="button">Entrar</button>
-          <button id="btnReset" class="btn btn-ghost" type="button" title="Borra toda la app">Borrar datos de la app</button>
+        <div class="row" style="margin-top:6px">
+          <button id="btnLogin" class="btn" type="button">Entrar →</button>
+          <button id="btnReset2" class="btn-ghost" type="button">Borrar datos de la app</button>
         </div>
-        <p class="hint">Consejo: fija este sitio como app (PWA) en tu móvil/escritorio para acceso directo.</p>
       </div>
+    </div>
 
-      <div id="appView" style="display:none">
-        <div class="split"></div>
+    <!-- APP -->
+    <div id="appView" style="display:none">
+      <div class="app-body">
         <div class="row">
           <div>
             <label>Fecha y hora del recordatorio</label>
@@ -116,17 +152,17 @@
           </div>
         </div>
 
-        <div class="row" style="margin-top:14px">
+        <div class="row" style="margin-top:16px">
           <div>
             <label>Mensaje a enviar</label>
             <textarea id="msg" rows="4" placeholder="Se generará automáticamente, pero puedes editarlo."></textarea>
-            <p class="hint">Se abrirá WhatsApp/WhatsApp Web con este mensaje pre-rellenado para que confirmes el envío.</p>
+            <p class="subtitle" style="margin-top:8px">Se abrirá WhatsApp/WhatsApp Web con este mensaje pre-rellenado para confirmar el envío.</p>
           </div>
           <div>
             <label>Acciones</label>
-            <div class="actions">
-              <button id="btnSend" class="btn btn-primary" type="button">Enviar por WhatsApp</button>
-              <button id="btnCopy" class="btn btn-ghost" type="button">Copiar enlace de WhatsApp</button>
+            <div style="display:flex; gap:12px; flex-wrap:wrap">
+              <button id="btnSend" class="btn" type="button">Enviar por WhatsApp</button>
+              <button id="btnCopy" class="btn-ghost" type="button">Copiar enlace de WhatsApp</button>
             </div>
             <div class="split"></div>
             <div>
@@ -135,37 +171,34 @@
                 <input id="newName" placeholder="Nombre (ej. Marta)">
                 <input id="newPhone" placeholder="Teléfono (ej. +34600111222)">
               </div>
-              <div class="actions" style="margin-top:10px">
-                <button id="btnAdd" class="btn btn-ghost" type="button">Añadir contacto</button>
-                <button id="btnRemove" class="btn btn-danger" type="button">Eliminar contacto seleccionado</button>
+              <div style="display:flex; gap:10px; margin-top:10px">
+                <button id="btnAdd" class="btn-ghost" type="button">Añadir contacto</button>
+                <button id="btnRemove" class="btn" type="button" style="background:linear-gradient(90deg,#f43f5e,#ef4444)">Eliminar contacto</button>
               </div>
-              <p class="hint">Formato E.164 recomendado: +34…, +52…, etc.</p>
             </div>
           </div>
         </div>
-
       </div>
-    </div>
-    <div class="footer">
-      <div class="tag">Estado: <span id="status" style="margin-left:6px" class="ok">Listo</span></div>
-      <div class="right">
-        <span id="who" class="pill">—</span>
-        <span id="logout" class="danger-link" style="display:none">Cerrar sesión</span>
+
+      <div class="footer">
+        <div class="tag">Estado: <span id="status" style="margin-left:6px" class="ok">Listo</span></div>
+        <div class="right">
+          <span id="who" class="pill">—</span>
+          <span id="logout" class="danger-link" style="display:none">Cerrar sesión</span>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-/* ===== Utilidades ===== */
+/* ===== Utilidades y estado (MISMA LÓGICA) ===== */
 var enc = new TextEncoder();
 var dec = new TextDecoder();
-var S = {
-  key:null, user:null, stateKey:'wa-reminders-app-v1',
-  state: function(){ var v = localStorage.getItem(this.stateKey); return v ? JSON.parse(v) : null; },
-  save: function(obj){ localStorage.setItem(this.stateKey, JSON.stringify(obj)); },
-  clear: function(){ localStorage.removeItem(this.stateKey); }
-};
+var S = { key:null, user:null, stateKey:'wa-reminders-app-v1',
+  state:function(){ var v=localStorage.getItem(this.stateKey); return v?JSON.parse(v):null; },
+  save:function(o){ localStorage.setItem(this.stateKey, JSON.stringify(o)); },
+  clear:function(){ localStorage.removeItem(this.stateKey); } };
 function $(id){ return document.getElementById(id); }
 function setStatus(text, ok){ if (ok===void 0) ok=true; var el=$('status'); if(el){ el.textContent=text; el.className = ok ? 'ok' : 'err'; } }
 function b64(buf){ return btoa(String.fromCharCode.apply(null, new Uint8Array(buf))); }
@@ -173,187 +206,153 @@ function ubuf(b64s){ return Uint8Array.from(atob(b64s), function(c){ return c.ch
 
 /* Fecha/hora por defecto: ahora + 1 hora */
 function setDefaultDate(){
-  var d = new Date(Date.now()+60*60*1000);
-  var isoLocal = new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
-  var el = $('dt'); if (el) el.value = isoLocal;
+  var d=new Date(Date.now()+60*60*1000);
+  var iso=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  var el=$('dt'); if(el) el.value=iso;
 }
 
-/* ===== Cripto (PBKDF2 + AES-GCM) ===== */
+/* Cripto (PBKDF2 + AES-GCM) */
 async function derive(password, saltB64){
-  var salt = saltB64 ? ubuf(saltB64) : crypto.getRandomValues(new Uint8Array(16)).buffer;
-  var baseKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
-  var bits = await crypto.subtle.deriveBits({name:'PBKDF2', salt:salt, iterations:250000, hash:'SHA-256'}, baseKey, 256);
-  var keyBytes = new Uint8Array(bits);
-  var pwHash = await crypto.subtle.digest('SHA-256', keyBytes);
-  var aesKey = await crypto.subtle.importKey('raw', keyBytes, {name:'AES-GCM'}, false, ['encrypt','decrypt']);
-  return { aesKey:aesKey, pwHashB64: b64(pwHash), saltB64: b64(salt) };
+  var salt=saltB64?ubuf(saltB64):crypto.getRandomValues(new Uint8Array(16)).buffer;
+  var baseKey=await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+  var bits=await crypto.subtle.deriveBits({name:'PBKDF2', salt:salt, iterations:250000, hash:'SHA-256'}, baseKey, 256);
+  var keyBytes=new Uint8Array(bits);
+  var pwHash=await crypto.subtle.digest('SHA-256', keyBytes);
+  var aesKey=await crypto.subtle.importKey('raw', keyBytes, {name:'AES-GCM'}, false, ['encrypt','decrypt']);
+  return {aesKey:aesKey, pwHashB64:b64(pwHash), saltB64:b64(salt)};
 }
 async function encryptJson(aesKey, obj){
-  var iv = crypto.getRandomValues(new Uint8Array(12));
-  var data = new TextEncoder().encode(JSON.stringify(obj));
-  var ct = await crypto.subtle.encrypt({name:'AES-GCM', iv:iv}, aesKey, data);
-  return { iv: b64(iv), ct: b64(ct) };
+  var iv=crypto.getRandomValues(new Uint8Array(12));
+  var data=new TextEncoder().encode(JSON.stringify(obj));
+  var ct=await crypto.subtle.encrypt({name:'AES-GCM', iv:iv}, aesKey, data);
+  return {iv:b64(iv), ct:b64(ct)};
 }
 async function decryptJson(aesKey, pack){
-  var iv = ubuf(pack.iv); var ct = ubuf(pack.ct);
-  var pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:new Uint8Array(iv)}, aesKey, ct);
+  var iv=ubuf(pack.iv); var ct=ubuf(pack.ct);
+  var pt=await crypto.subtle.decrypt({name:'AES-GCM', iv:new Uint8Array(iv)}, aesKey, ct);
   return JSON.parse(new TextDecoder().decode(pt));
 }
 
-/* ===== Vistas ===== */
+/* Vistas */
 function show(id){
-  var ids=['setupView','loginView','appView'];
-  for (var i=0;i<ids.length;i++){ var el=$(ids[i]); if (el) el.style.display = (ids[i]===id?'block':'none'); }
-  var l = $('logout'); if (l) l.style.display = (id==='appView') ? 'inline' : 'none';
+  ['setupView','loginView','appView'].forEach(function(v){
+    var el=$(v); if(el) el.style.display=(v===id?'block':'none');
+  });
+  var l=$('logout'); if(l) l.style.display=(id==='appView')?'inline':'none';
 }
 function refreshContactsSelect(list){
-  var sel = $('contactSelect'); if(!sel) return;
-  sel.innerHTML='';
-  if (!list || list.length===0){
-    var opt=document.createElement('option'); opt.value=''; opt.text='— Sin contactos —'; sel.add(opt); return;
-  }
-  for (var i=0;i<list.length;i++){ var c=list[i]; var opt=document.createElement('option'); opt.value=c.phone; opt.text=c.name+' ('+c.phone+')'; sel.add(opt); }
+  var sel=$('contactSelect'); if(!sel) return; sel.innerHTML='';
+  if(!list||list.length===0){ var o=document.createElement('option'); o.value=''; o.text='— Sin contactos —'; sel.add(o); return; }
+  list.forEach(function(c){ var o=document.createElement('option'); o.value=c.phone; o.text=c.name+' ('+c.phone+')'; sel.add(o); });
 }
 function isPhoneValid(p){ return /^\+\d{6,15}$/.test(p); }
 
-/* ===== Mensaje ===== */
+/* Mensaje */
 function buildMessage(){
-  var dtEl = $('dt'); var dtVal = dtEl ? dtEl.value : '';
-  var when = dtVal ? new Date(dtVal) : new Date();
-  var d = when.toLocaleDateString(undefined, {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
-  var t = when.toLocaleTimeString(undefined, {hour:'2-digit', minute:'2-digit'});
+  var el=$('dt'); var v=el?el.value:'';
+  var when=v?new Date(v):new Date();
+  var d=when.toLocaleDateString(undefined,{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  var t=when.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
   return '¡Hola! 👋 Tienes un recordatorio para el '+d+' a las '+t+'.';
 }
-function updateMessage(){ var m=$('msg'); if(m) m.value = buildMessage(); }
+function updateMessage(){ var m=$('msg'); if(m) m.value=buildMessage(); }
 
-/* ===== App ===== */
+/* Eventos (mantenemos ids y lógica) */
 function wireEvents(){
-  var btnSetup = $('btnSetup');
-  if (btnSetup){
+  function togglePassword(id){ var i=$(id); if(i) i.type=(i.type==='password'?'text':'password'); }
+  var t1=$('toggleLogin'); if(t1){ t1.addEventListener('click', function(){ togglePassword('loginPass'); }); }
+  var t2=$('toggleSetup'); if(t2){ t2.addEventListener('click', function(){ togglePassword('setupPass'); }); }
+
+  var btnSetup=$('btnSetup');
+  if(btnSetup){
     btnSetup.addEventListener('click', async function(){
-      var user = $('setupUser').value.trim();
-      var pass = $('setupPass').value;
-      if (!user || pass.length<6){ setStatus('Usuario y contraseña (>=6) requeridos', false); return; }
+      var user=$('setupUser').value.trim();
+      var pass=$('setupPass').value;
+      if(!user||pass.length<6){ setStatus('Usuario y contraseña (>=6) requeridos', false); return; }
       try{
-        var r = await derive(pass);
-        S.key = r.aesKey; S.user = user;
-        var pack = await encryptJson(S.key, { list: [] });
-        S.save({ user: user, pwHashB64: r.pwHashB64, saltB64: r.saltB64, vault: pack });
-        var who=$('who'); if(who) who.textContent = 'Conectado: '+user;
-        refreshContactsSelect([]);
-        show('appView'); setStatus('Sesión iniciada');
-      }catch(e){
-        console.error(e); setStatus('Error creando el almacén', false);
-      }
+        var r=await derive(pass);
+        S.key=r.aesKey; S.user=user;
+        var pack=await encryptJson(S.key,{list:[]});
+        S.save({user:user,pwHashB64:r.pwHashB64,saltB64:r.saltB64,vault:pack});
+        var who=$('who'); if(who) who.textContent='Conectado: '+user;
+        refreshContactsSelect([]); show('appView'); setStatus('Sesión iniciada');
+      }catch(e){ console.error(e); setStatus('Error creando el almacén', false); }
     });
   }
 
-  var btnLogin = $('btnLogin');
-  if (btnLogin){
+  var btnLogin=$('btnLogin');
+  if(btnLogin){
     btnLogin.addEventListener('click', async function(){
-      var user = $('loginUser').value.trim();
-      var pass = $('loginPass').value;
-      var state = S.state();
-      if (!state){ setStatus('No hay datos guardados. Crea una cuenta.', false); show('setupView'); return; }
-      if (user !== state.user){ setStatus('Usuario incorrecto', false); return; }
+      var user=$('loginUser').value.trim();
+      var pass=$('loginPass').value;
+      var state=S.state();
+      if(!state){ setStatus('No hay datos guardados. Crea una cuenta.', false); show('setupView'); return; }
+      if(user!==state.user){ setStatus('Usuario incorrecto', false); return; }
       try{
-        var r = await derive(pass, state.saltB64);
-        if (r.pwHashB64 !== state.pwHashB64){ setStatus('Contraseña incorrecta', false); return; }
-        var vault = await decryptJson(r.aesKey, state.vault);
-        S.key = r.aesKey; S.user = user;
-        var who=$('who'); if(who) who.textContent = 'Conectado: '+user;
-        refreshContactsSelect(vault.list);
-        show('appView'); setStatus('Sesión iniciada');
+        var r=await derive(pass, state.saltB64);
+        if(r.pwHashB64!==state.pwHashB64){ setStatus('Contraseña incorrecta', false); return; }
+        var vault=await decryptJson(r.aesKey, state.vault);
+        S.key=r.aesKey; S.user=user;
+        var who=$('who'); if(who) who.textContent='Conectado: '+user;
+        refreshContactsSelect(vault.list); show('appView'); setStatus('Sesión iniciada');
       }catch(e){ console.error(e); setStatus('Error al descifrar datos', false); }
     });
   }
 
-  var logout = $('logout');
-  if (logout){
-    logout.addEventListener('click', function(){ show('loginView'); setStatus('Sesión cerrada'); var lp=$('loginPass'); if(lp) lp.value=''; });
-  }
-  var btnReset = $('btnReset');
-  if (btnReset){
-    btnReset.addEventListener('click', function(){ if(confirm('Esto borrará TODA la app (usuario, contactos). ¿Continuar?')){ S.clear(); location.reload(); } });
-  }
+  var logout=$('logout'); if(logout){ logout.addEventListener('click', function(){ show('loginView'); setStatus('Sesión cerrada'); var lp=$('loginPass'); if(lp) lp.value=''; }); }
+  var btnReset=$('btnReset'); if(btnReset){ btnReset.addEventListener('click', function(){ if(confirm('Esto borrará TODA la app (usuario, contactos). ¿Continuar?')){ S.clear(); location.reload(); } }); }
+  var btnReset2=$('btnReset2'); if(btnReset2){ btnReset2.addEventListener('click', function(){ if(confirm('Esto borrará TODA la app (usuario, contactos). ¿Continuar?')){ S.clear(); location.reload(); } }); }
 
-  // Contactos
-  async function loadVault(){ var st = S.state(); return st ? await decryptJson(S.key, st.vault) : { list: [] }; }
-  async function saveVault(v){ var pack = await encryptJson(S.key, v); var st = S.state(); st.vault = pack; S.save(st); }
+  async function loadVault(){ var st=S.state(); return st?await decryptJson(S.key, st.vault):{list:[]}; }
+  async function saveVault(v){ var pack=await encryptJson(S.key,v); var st=S.state(); st.vault=pack; S.save(st); }
 
-  var btnAdd = $('btnAdd');
-  if (btnAdd){
+  var btnAdd=$('btnAdd'); if(btnAdd){
     btnAdd.addEventListener('click', async function(){
-      var name = $('newName').value.trim();
-      var phone = $('newPhone').value.trim();
-      if (!name || !isPhoneValid(phone)){ setStatus('Nombre y teléfono válido (+ prefijo) requeridos', false); return; }
-      var vault = await loadVault();
-      for (var i=0;i<vault.list.length;i++){ if (vault.list[i].phone===phone){ setStatus('Ese teléfono ya existe', false); return; } }
-      vault.list.push({name:name, phone:phone});
-      await saveVault(vault);
-      refreshContactsSelect(vault.list);
-      $('newName').value=''; $('newPhone').value='';
-      setStatus('Contacto añadido');
+      var name=$('newName').value.trim();
+      var phone=$('newPhone').value.trim();
+      if(!name||!isPhoneValid(phone)){ setStatus('Nombre y teléfono válido (+ prefijo) requeridos', false); return; }
+      var vault=await loadVault();
+      if(vault.list.some(function(c){return c.phone===phone;})){ setStatus('Ese teléfono ya existe', false); return; }
+      vault.list.push({name:name, phone:phone}); await saveVault(vault);
+      refreshContactsSelect(vault.list); $('newName').value=''; $('newPhone').value=''; setStatus('Contacto añadido');
     });
   }
 
-  var btnRemove = $('btnRemove');
-  if (btnRemove){
+  var btnRemove=$('btnRemove'); if(btnRemove){
     btnRemove.addEventListener('click', async function(){
-      var sel = $('contactSelect'); var phone = sel ? sel.value : '';
-      if (!phone){ setStatus('No hay contacto seleccionado', false); return; }
-      var vault = await loadVault();
-      var before = vault.list.length;
-      vault.list = vault.list.filter(function(c){ return c.phone!==phone; });
-      await saveVault(vault);
-      refreshContactsSelect(vault.list);
+      var sel=$('contactSelect'); var phone=sel?sel.value:'';
+      if(!phone){ setStatus('No hay contacto seleccionado', false); return; }
+      var vault=await loadVault(); var before=vault.list.length;
+      vault.list=vault.list.filter(function(c){ return c.phone!==phone; });
+      await saveVault(vault); refreshContactsSelect(vault.list);
       setStatus(before!==vault.list.length ? 'Contacto eliminado' : 'No se encontró el contacto', before!==vault.list.length);
     });
   }
 
-  var dt = $('dt'); if (dt){ dt.addEventListener('change', updateMessage); }
+  var dt=$('dt'); if(dt){ dt.addEventListener('change', updateMessage); }
 
-  // WhatsApp
   function buildWaLink(){
-    var sel = $('contactSelect'); var phone = sel ? sel.value : '';
-    if (!isPhoneValid(phone)) return null;
-    var msg = $('msg') ? $('msg').value.trim() : '';
-    var text = encodeURIComponent(msg || buildMessage());
+    var sel=$('contactSelect'); var phone=sel?sel.value:''; if(!isPhoneValid(phone)) return null;
+    var msg=$('msg')?$('msg').value.trim():''; var text=encodeURIComponent(msg||buildMessage());
     return 'https://wa.me/'+phone.replace('+','')+'/?text='+text;
   }
-  var btnSend = $('btnSend'); if (btnSend){
-    btnSend.addEventListener('click', function(){
-      var url = buildWaLink();
-      if (!url){ setStatus('Selecciona un contacto válido', false); return; }
-      window.open(url, '_blank'); setStatus('Abriendo WhatsApp…');
-    });
-  }
-  var btnCopy = $('btnCopy'); if (btnCopy){
-    btnCopy.addEventListener('click', async function(){
-      var url = buildWaLink();
-      if (!url){ setStatus('Selecciona un contacto válido', false); return; }
-      try{ await navigator.clipboard.writeText(url); setStatus('Enlace copiado'); }
-      catch(e){ setStatus('No se pudo copiar', false); }
-    });
-  }
+  var btnSend=$('btnSend'); if(btnSend){ btnSend.addEventListener('click', function(){ var url=buildWaLink(); if(!url){ setStatus('Selecciona un contacto válido', false); return; } window.open(url, '_blank'); setStatus('Abriendo WhatsApp…'); }); }
+  var btnCopy=$('btnCopy'); if(btnCopy){ btnCopy.addEventListener('click', async function(){ var url=buildWaLink(); if(!url){ setStatus('Selecciona un contacto válido', false); return; } try{ await navigator.clipboard.writeText(url); setStatus('Enlace copiado'); } catch(e){ setStatus('No se pudo copiar', false); } }); }
 
   // Teclas rápidas
   var lu=$('loginUser'), lp=$('loginPass'), su=$('setupUser'), sp=$('setupPass');
-  if (lu){ lu.addEventListener('keydown', function(e){ if(e.key==='Enter'){ var b=$('btnLogin'); if(b) b.click(); } }); }
-  if (lp){ lp.addEventListener('keydown', function(e){ if(e.key==='Enter'){ var b=$('btnLogin'); if(b) b.click(); } }); }
-  if (su){ su.addEventListener('keydown', function(e){ if(e.key==='Enter'){ var b=$('btnSetup'); if(b) b.click(); } }); }
-  if (sp){ sp.addEventListener('keydown', function(e){ if(e.key==='Enter'){ var b=$('btnSetup'); if(b) b.click(); } }); }
+  if(lu){ lu.addEventListener('keydown', function(e){ if(e.key==='Enter'){ var b=$('btnLogin'); if(b) b.click(); } }); }
+  if(lp){ lp.addEventListener('keydown', function(e){ if(e.key==='Enter'){ var b=$('btnLogin'); if(b) b.click(); } }); }
+  if(su){ su.addEventListener('keydown', function(e){ if(e.key==='Enter'){ var b=$('btnSetup'); if(b) b.click(); } }); }
+  if(sp){ sp.addEventListener('keydown', function(e){ if(e.key==='Enter'){ var b=$('btnSetup'); if(b) b.click(); } }); }
 }
 
 function init(){
-  var state = S.state();
-  if (!state){ show('setupView'); setStatus('Primer uso'); }
+  var state=S.state();
+  if(!state){ show('setupView'); setStatus('Primer uso'); }
   else{ show('loginView'); setStatus('Introduce tus credenciales'); }
-  setDefaultDate();
-  updateMessage();
-  wireEvents();
+  setDefaultDate(); updateMessage(); wireEvents();
 }
-
 document.addEventListener('DOMContentLoaded', init);
 </script>
 
