@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
   <title>MF Gestor de Citas</title>
   <meta name="theme-color" content="#5e5bff">
-  <link rel="manifest" href="manifest.webmanifest?v=ui7">
+  <link rel="manifest" href="manifest.webmanifest?v=ui8">
   <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <style>
@@ -228,7 +228,18 @@
             <label style="margin-top:0">Gestionar contactos</label>
             <div class="grid2">
               <div class="field"><input id="newName" placeholder="Nombre" /></div>
-              <div class="field"><input id="newPhone" placeholder="+34600111222" /></div>
+              <div class="field">
+                <!-- Teléfono: teclado telefónico y soporte "+" -->
+                <input
+                  id="newPhone"
+                  type="tel"
+                  inputmode="tel"
+                  autocomplete="tel"
+                  enterkeyhint="done"
+                  pattern="^\+\d{6,15}$"
+                  placeholder="+34600111222"
+                />
+              </div>
             </div>
             <div style="display:flex; gap:12px; margin-top:12px; flex-wrap:wrap">
               <button id="btnAdd" class="btn btn-outline" type="button">Añadir contacto</button>
@@ -593,6 +604,37 @@
       const loadVault = async ()=>{ const st=S.state(); return st?await decryptJson(S.key, st.vault):{list:[]}; };
       const saveVault = async v=>{ const pack=await encryptJson(S.key,v); const st=S.state(); st.vault=pack; S.save(st); };
 
+      // === Teclado telefónico UX: prefijo "+" y limpieza ===
+      (function setupPhoneInput(){
+        const el = $('newPhone');
+        if(!el) return;
+        // En caso de que el DOM se inyecte/cachee antiguo
+        el.setAttribute('type','tel');
+        el.setAttribute('inputmode','tel');
+        el.setAttribute('autocomplete','tel');
+        el.setAttribute('enterkeyhint','done');
+        el.setAttribute('pattern','^\\+\\d{6,15}$');
+
+        el.addEventListener('focus', () => {
+          if (!el.value) {
+            el.value = '+';
+            setTimeout(() => {
+              try { el.setSelectionRange(el.value.length, el.value.length); } catch(_){}
+            }, 0);
+          }
+        });
+
+        el.addEventListener('input', () => {
+          const start = el.selectionStart ?? el.value.length;
+          const cleaned = '+' + el.value.replace(/^\+?/, '').replace(/[^\\d]/g, '');
+          if (el.value !== cleaned) {
+            el.value = cleaned;
+            const pos = Math.min(cleaned.length, start);
+            try { el.setSelectionRange(pos, pos); } catch(_){}
+          }
+        });
+      })();
+
       $('btnAdd')?.addEventListener('click', async ()=>{
         const name=$('newName').value.trim(), phone=$('newPhone').value.trim();
         if(!name){ alert('Introduce un nombre'); return; }
@@ -664,7 +706,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
-        navigator.serviceWorker.register('./service-worker.js?v=ui7').catch(()=>{});
+        navigator.serviceWorker.register('./service-worker.js?v=ui8').catch(()=>{});
       });
     }
   </script>
