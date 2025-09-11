@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
   <title>MF Gestor de Citas</title>
   <meta name="theme-color" content="#5e5bff">
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.webmanifest?v=headerrev1">
+  <link rel="manifest" href="manifest.webmanifest?v=backup2">
   <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <style>
@@ -30,8 +29,7 @@
     @media (min-width:900px){ .card{ border-radius:28px; box-shadow:0 40px 100px rgba(0,0,0,.25), 0 30px 70px rgba(94,91,255,.18) } }
     /* Header */
     .auth-head{ display:flex; align-items:center; gap:12px; padding:20px 16px 10px 16px }
-    .logo-box{ width:46px; height:46px; border-radius:12px; overflow:hidden; flex:0 0 auto;
-               box-shadow:0 10px 30px rgba(16,181,255,.25) }
+    .logo-box{ width:46px; height:46px; border-radius:12px; overflow:hidden; flex:0 0 auto; box-shadow:0 10px 30px rgba(16,181,255,.25) }
     .logo-box img{ width:100%; height:100%; display:block; object-fit:cover; background:#fff }
     .title{ margin:0; font-size:clamp(22px, 3.8vw, 28px); color:var(--ink) }
     .subtitle{ margin:2px 0 0; font-size:clamp(12px, 2.4vw, 14px); color:#475569 }
@@ -62,14 +60,19 @@
       box-shadow: 0 18px 34px rgba(16,181,255,.28), 0 18px 34px rgba(94,91,255,.28);
       letter-spacing:.2px;
     }
+    .btn-ghost{ appearance:none; background:transparent; border:1px dashed rgba(94,91,255,.35); color:#0b1220; padding:14px 16px; border-radius:18px; font-weight:700; width:100%; }
+    .btn-small{ padding:12px 14px; border-radius:14px; font-weight:700 }
     .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:18px }
     @media (max-width:720px){ .grid2{ grid-template-columns:1fr } }
     .section{ padding:12px 0 0 }
     .container{ width:100%; max-width:600px; margin-inline:auto; padding-inline:16px }
     .contact-block{
       background:linear-gradient(180deg, rgba(246,247,255,.9), rgba(243,246,255,.85));
-      border:1px solid rgba(94,91,255,.22); border-radius:18px; padding:18px;
-      box-shadow: 0 10px 26px rgba(94,91,255,.08);
+      border:1px solid rgba(94,91,255,.22); border-radius:18px; padding:18px; box-shadow: 0 10px 26px rgba(94,91,255,.08);
+    }
+    .backup-block{
+      background:linear-gradient(180deg, rgba(249,250,255,.92), rgba(245,248,255,.9));
+      border:1px dashed rgba(94,91,255,.35); border-radius:18px; padding:18px; box-shadow: 0 8px 20px rgba(94,91,255,.06);
     }
     .btn-outline{ border:1px solid rgba(94,91,255,.35); background:#fff; color:#1f2a44; }
     .btn-danger{ background:linear-gradient(90deg,#ff6b6b,#ef4444); color:#fff; border:none }
@@ -80,7 +83,6 @@
 </head>
 <body>
   <div class="card">
-    <!-- Header actualizado: usa el icono real en lugar de las iniciales -->
     <div class="auth-head">
       <div class="logo-box"><img src="icons/icon-192.png" alt="Logo" /></div>
       <div>
@@ -90,9 +92,7 @@
     </div>
     <div class="hr"></div>
 
-    <!-- Main (views) -->
     <main id="main" class="main">
-      <!-- SETUP -->
       <section id="setupView" class="stage">
         <div class="stage-inner">
           <div class="row">
@@ -110,7 +110,6 @@
         </div>
       </section>
 
-      <!-- LOGIN -->
       <section id="loginView" class="stage">
         <div class="stage-inner">
           <div class="row">
@@ -126,12 +125,15 @@
           </div>
           <div class="row">
             <button id="btnLogin" class="btn" type="button">Entrar</button>
-            <button id="btnReset" class="btn" type="button" style="display:none;background:transparent;color:#0b1220;border:1px dashed rgba(94,91,255,.35)">Borrar datos de la app</button>
+            <button id="btnReset" class="btn-ghost" type="button" style="display:none">Borrar datos de la app</button>
+          </div>
+          <div class="row">
+            <input id="restoreInputLogin" type="file" accept="application/json" style="display:none">
+            <button id="btnRestoreLogin" class="btn-ghost btn-small" type="button">Restaurar copia de seguridad…</button>
           </div>
         </div>
       </section>
 
-      <!-- APP -->
       <section id="appView" class="stage" style="display:none">
         <div class="section">
           <div class="container grid2">
@@ -171,6 +173,21 @@
           </div>
         </div>
 
+        <div class="section">
+          <div class="container backup-block">
+            <label style="margin-top:0">Copias de seguridad</label>
+            <div style="display:flex; flex-wrap:wrap; gap:12px">
+              <button id="btnExport" class="btn btn-outline" type="button">Exportar copia cifrada (.json)</button>
+              <button id="btnExportCsv" class="btn btn-outline" type="button">Exportar CSV</button>
+              <input id="restoreInputApp" type="file" accept="application/json" style="display:none">
+              <button id="btnImportApp" class="btn btn-outline" type="button">Importar copia…</button>
+            </div>
+            <p style="margin:10px 0 0; color:#475569; font-size:14px">
+              La copia <strong>.json</strong> está cifrada con tu contraseña. Para restaurar, importa el archivo y entra con tu contraseña.
+            </p>
+          </div>
+        </div>
+
         <div class="footer">
           <span id="who" class="chip">Conectado: —</span>
           <span id="logout" class="logout" style="display:none">Cerrar sesión</span>
@@ -201,17 +218,68 @@
     async function encryptJson(aesKey,obj){ const iv=crypto.getRandomValues(new Uint8Array(12)); const data=new TextEncoder().encode(JSON.stringify(obj)); const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},aesKey,data); return {iv:b64(iv),ct:b64(ct)}; }
     async function decryptJson(aesKey,pack){ const iv=ubuf(pack.iv), ct=ubuf(pack.ct); const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(iv)},aesKey,ct); return JSON.parse(new TextDecoder().decode(pt)); }
 
+    // Descarga robusta (iOS/Android/desktop/PWA)
+    async function saveFileSmart(filename, mime, content){
+      let blob;
+      if (typeof content === 'string') blob = new Blob([content], {type: mime});
+      else if (content instanceof ArrayBuffer) blob = new Blob([new Uint8Array(content)], {type: mime});
+      else blob = new Blob([content], {type: mime});
+
+      // 1) Web Share API con archivos
+      try {
+        if (navigator.canShare && 'share' in navigator) {
+          const file = new File([blob], filename, {type: mime});
+          if (navigator.canShare({files: [file]})) {
+            await navigator.share({files: [file], title: filename});
+            return true;
+          }
+        }
+      } catch(e) {}
+
+      // 2) ObjectURL con <a download>
+      try {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename; a.rel='noopener';
+        document.body.appendChild(a); a.click();
+        setTimeout(()=>{ try{ URL.revokeObjectURL(url); }catch(_){ } a.remove(); }, 1200);
+        return true;
+      } catch(e) {}
+
+      // 3) data: URL en pestaña nueva
+      try {
+        const buf = await blob.arrayBuffer();
+        let binary = ''; const bytes = new Uint8Array(buf);
+        for (let i=0;i<bytes.length;i++) binary += String.fromCharCode(bytes[i]);
+        const base64 = btoa(binary);
+        const dataUrl = 'data:' + mime + ';base64,' + base64;
+        window.open(dataUrl, '_blank');
+        return true;
+      } catch(e) {}
+
+      // 4) Copiar texto
+      try {
+        if (typeof content === 'string' && navigator.clipboard) {
+          await navigator.clipboard.writeText(content);
+          alert('No se pudo descargar. He copiado el contenido al portapapeles.');
+          return true;
+        }
+      } catch(e) {}
+      alert('No se pudo descargar el archivo en este navegador.');
+      return false;
+    }
+    const saveJson = (name, obj) => saveFileSmart(name, 'application/json', JSON.stringify(obj, null, 2));
+    const saveCsv  = (name, csv) => saveFileSmart(name, 'text/csv', csv);
+
     // UI helpers
     function setHeaderTitle(t){ const h=$('hdrTitle'); if(h) h.textContent=t; }
     function toggleResetVisibility(){ const reset=$('btnReset'); if(reset) reset.style.display = S.state() ? 'inline-flex' : 'none'; }
     function show(id){
       ['setupView','loginView','appView'].forEach(v=>{ const el=$(v); if(el) el.style.display=(v===id?'block':'none'); });
       $('logout') && ($('logout').style.display = id==='appView' ? 'inline' : 'none');
-      if(id==='appView'){ setHeaderTitle('Enviar cita'); }
-      else { setHeaderTitle('Iniciar sesión'); }
+      if(id==='appView'){ setHeaderTitle('Enviar cita'); } else { setHeaderTitle('Iniciar sesión'); }
       if(id==='loginView'){ toggleResetVisibility(); }
       if(id==='setupView'){ const r=$('btnReset'); if(r) r.style.display='none'; }
-      // Asegurar scroll arriba
       window.scrollTo(0,0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0;
     }
 
@@ -234,6 +302,53 @@
       return `¡Hola! 👋 Tienes un recordatorio para el ${d} a las ${t}.`;
     }
     function updateMessage(){ const m=$('msg'); if(m) m.value=buildMessage(); }
+
+    // Descarga/subida helpers
+    function pickFileOnce(inputEl, handler){
+      inputEl.value='';
+      inputEl.onchange=async (e)=>{
+        const f=e.target.files && e.target.files[0];
+        if(!f) return;
+        try{ await handler(f); } finally { inputEl.value=''; }
+      };
+      inputEl.click();
+    }
+
+    async function exportEncryptedBackup(){
+      const st=S.state();
+      if(!st){ alert('No hay datos que exportar todavía. Crea tu usuario primero.'); return; }
+      const backup = {
+        format: 'mf-contacts-v1',
+        user: st.user,
+        saltB64: st.saltB64,
+        pwHashB64: st.pwHashB64,
+        vault: st.vault,
+        timestamp: new Date().toISOString()
+      };
+      saveJson(`copia-contactos-${st.user}.json`, backup);
+    }
+    async function exportCSV(){
+      if(!S.key){ alert('Inicia sesión para exportar CSV.'); return; }
+      const st=S.state(); if(!st){ alert('No hay datos.'); return; }
+      const vault=await decryptJson(S.key, st.vault);
+      const rows=[['nombre','telefono'], ...vault.list.map(c=>[c.name, c.phone])];
+      const csv = rows.map(r=>r.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(',')).join('\n');
+      saveCsv('contactos.csv', csv);
+    }
+    async function importBackupFromFile(file){
+      const text=await file.text();
+      let data;
+      try{ data=JSON.parse(text); }catch(_){ alert('Archivo no válido'); return; }
+      if(!data || data.format!=='mf-contacts-v1' || !data.vault || !data.saltB64 || !data.pwHashB64){
+        alert('Copia no reconocida'); return;
+      }
+      const exists=S.state();
+      if(exists && !confirm('Esto reemplazará los datos actuales por la copia importada. ¿Continuar?')) return;
+      S.save({ user: data.user || 'Usuario', saltB64:data.saltB64, pwHashB64:data.pwHashB64, vault:data.vault });
+      S.key=null;
+      alert('Copia importada. Ahora inicia sesión con tu contraseña para acceder a tus contactos.');
+      show('loginView');
+    }
 
     function wireEvents(){
       const toggle = id => { const i=$(id); if(i) i.type = i.type==='password' ? 'text' : 'password'; };
@@ -295,20 +410,24 @@
         if(!phone){ alert('No hay contacto seleccionado'); return; }
         const vault=await loadVault(); const before=vault.list.length;
         vault.list=vault.list.filter(c=>c.phone!==phone); await saveVault(vault);
-        refreshContactsSelect(vault.list); if(before===vault.list.length) alert('No se encontró el contacto');
+        refreshContactsSelect(vault.list);
+        if(before===vault.list.length) alert('No se encontró el contacto');
       });
 
       $('dt')?.addEventListener('change', updateMessage);
-
-      function waLink(){
-        const sel=$('contactSelect'); const phone=sel?sel.value:''; if(!isPhoneValid(phone)) return null;
-        const text=encodeURIComponent(($('msg')?.value||buildMessage()).trim());
-        return `https://wa.me/${phone.replace('+','')}/?text=${text}`;
-      }
       $('btnSend')?.addEventListener('click', ()=>{
-        const url=waLink(); if(!url){ alert('Selecciona un contacto válido'); return; }
+        const sel=$('contactSelect'); const phone=sel?sel.value:'';
+        if(!isPhoneValid(phone)){ alert('Selecciona un contacto válido'); return; }
+        const text=encodeURIComponent(($('msg')?.value||buildMessage()).trim());
+        const url=`https://wa.me/${phone.replace('+','')}/?text=${text}`;
         window.open(url,'_blank');
       });
+
+      // Backups
+      $('btnExport')?.addEventListener('click', exportEncryptedBackup);
+      $('btnExportCsv')?.addEventListener('click', exportCSV);
+      $('btnImportApp')?.addEventListener('click', ()=>pickFileOnce($('restoreInputApp'), importBackupFromFile));
+      $('btnRestoreLogin')?.addEventListener('click', ()=>pickFileOnce($('restoreInputLogin'), importBackupFromFile));
 
       ['loginUser','loginPass','setupUser','setupPass'].forEach(id=>{
         const el=$(id); el&&el.addEventListener('keydown',e=>{
@@ -317,20 +436,13 @@
       });
     }
 
-    // Init
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
     function toTop(){ window.scrollTo(0,0); document.documentElement.scrollTop=0; document.body.scrollTop=0; }
-
-    function setDefaultDateNow(){
-      const d=new Date(Date.now()+60*60*1000);
-      const iso=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
-      const el=$('dt'); if(el) el.value=iso;
-    }
 
     function init(){
       const state=S.state();
       show(state? 'loginView' : 'setupView');
-      setDefaultDateNow(); updateMessage(); wireEvents();
+      setDefaultDate(); updateMessage(); wireEvents();
       setTimeout(toTop, 40);
     }
     document.addEventListener('DOMContentLoaded', init);
@@ -339,10 +451,9 @@
   </script>
 
   <script>
-    // Registrar el SW con cache-busting
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
-        navigator.serviceWorker.register('./service-worker.js?v=headerrev1').catch(()=>{});
+        navigator.serviceWorker.register('./service-worker.js?v=backup2').catch(()=>{});
       });
     }
   </script>
