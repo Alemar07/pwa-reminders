@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
   <title>MF Gestor de Citas</title>
   <meta name="theme-color" content="#5e5bff">
-  <link rel="manifest" href="manifest.webmanifest?v=ui6">
+  <link rel="manifest" href="manifest.webmanifest?v=ui7">
   <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <style>
@@ -49,7 +49,7 @@
     .field select, .field input[type="datetime-local"]{ min-height:56px; }
     .field input[type="datetime-local"]{ -webkit-appearance:none; appearance:none; }
     .field textarea{ min-height:130px; resize:vertical; overflow:auto; }
-    .icon-left, .icon-right{ position:absolute; top:50%; transform:translateY(-50%); width:22px; height:22px; opacity:.7 }
+    .icon-left, .icon-right{ position:absolute; top:50%; transform:translateY(-50%); width:22px; height:22px; opacity:.8 }
     .icon-left{ left:14px } .icon-right{ right:14px; cursor:pointer }
     label{ display:block; font-size:16px; color:#374151; margin:6px 0 8px; font-weight:700 }
     .btn{
@@ -133,12 +133,22 @@
         <div class="stage-inner">
           <div class="row">
             <div class="field">
-              <svg class="icon-left" viewBox="0 0 24 24" fill="none"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5.33 0-8 2.67-8 6v1h16v-1c0-3.33-2.67-6-8-6Z" fill="currentColor"/></svg>
+              <!-- Usuario -->
+              <svg class="icon-left" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5.33 0-8 2.67-8 6v1h16v-1c0-3.33-2.67-6-8-6Z" fill="currentColor"/>
+              </svg>
               <input id="setupUser" placeholder="Usuario" autocomplete="username">
             </div>
             <div class="field">
-              <svg class="icon-left" viewBox="0 0 24 24" fill="none"><path d="M12 12a3 3 0 0 0-3 3v3h6v-3a3 3 0 0 0-3-3Zm0-7a5 5 0 0 1 5 5v3H7V10a5 5 0 0 1 5-5Z" fill="currentColor"/></svg>
+              <!-- Contraseña: candado estilo iOS -->
+              <svg class="icon-left" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="5" y="11" width="14" height="10" rx="2"></rect>
+                  <path d="M7 11V8a5 5 0 0 1 10 0v3"></path>
+                </g>
+              </svg>
               <input id="setupPass" type="password" placeholder="Contraseña" autocomplete="new-password">
+              <!-- Ojo/Ojo tachado se inyecta por JS -->
               <svg id="toggleSetup" class="icon-right" viewBox="0 0 24 24" fill="none" aria-label="Mostrar/Ocultar"></svg>
             </div>
           </div>
@@ -151,12 +161,22 @@
         <div class="stage-inner">
           <div class="row">
             <div class="field">
-              <svg class="icon-left" viewBox="0 0 24 24" fill="none"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5.33 0-8 2.67-8 6v1h16v-1c0-3.33-2.67-6-8-6Z" fill="currentColor"/></svg>
+              <!-- Usuario -->
+              <svg class="icon-left" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5.33 0-8 2.67-8 6v1h16v-1c0-3.33-2.67-6-8-6Z" fill="currentColor"/>
+              </svg>
               <input id="loginUser" placeholder="Usuario" autocomplete="username">
             </div>
             <div class="field">
-              <svg class="icon-left" viewBox="0 0 24 24" fill="none"><path d="M12 12a3 3 0 0 0-3 3v3h6v-3a3 3 0 0 0-3-3Zm0-7a5 5 0 0 1 5 5v3H7V10a5 5 0 0 1 5-5Z" fill="currentColor"/></svg>
+              <!-- Contraseña: candado estilo iOS -->
+              <svg class="icon-left" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="5" y="11" width="14" height="10" rx="2"></rect>
+                  <path d="M7 11V8a5 5 0 0 1 10 0v3"></path>
+                </g>
+              </svg>
               <input id="loginPass" type="password" placeholder="Contraseña" autocomplete="current-password">
+              <!-- Ojo/Ojo tachado se inyecta por JS -->
               <svg id="toggleLogin" class="icon-right" viewBox="0 0 24 24" fill="none" aria-label="Mostrar/Ocultar"></svg>
             </div>
           </div>
@@ -498,9 +518,20 @@
       const t=$('autoBackupToggle'); if(t) t.checked = st.autoBackup;
     }
 
-    // ===== Ojo mostrar/ocultar =====
-    const eyeOpen = '<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Zm11 5a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" fill="currentColor"/>';
-    const eyeOff = '<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Zm11 5a5 5 0 0 0 4.58-2.85M7.76 7.76A5 5 0 0 0 12 7m-9 0L21 21" fill="none" stroke="currentColor" stroke-width="2"/>';
+    // ===== Ojo mostrar/ocultar (estilo Apple) =====
+    const eyeOpen = `
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 5c-5.5 0-10 4.5-11 7 1 2.5 5.5 7 11 7s10-4.5 11-7c-1-2.5-5.5-7-11-7Z"></path>
+        <circle cx="12" cy="12" r="3.5" fill="currentColor" stroke="none"></circle>
+      </g>
+    `;
+    const eyeOff = `
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 5c-5.5 0-10 4.5-11 7 1 2.5 5.5 7 11 7s10-4.5 11-7c-1-2.5-5.5-7-11-7Z"></path>
+        <circle cx="12" cy="12" r="3.5" fill="currentColor" stroke="none"></circle>
+        <path d="M3 3L21 21"></path>
+      </g>
+    `;
     function setEyeIcon(el, visible){
       if(!el) return;
       el.innerHTML = visible ? eyeOff : eyeOpen; // visible=true => ojo tachado
@@ -633,7 +664,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
-        navigator.serviceWorker.register('./service-worker.js?v=ui6').catch(()=>{});
+        navigator.serviceWorker.register('./service-worker.js?v=ui7').catch(()=>{});
       });
     }
   </script>
