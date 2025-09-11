@@ -626,7 +626,7 @@
 
         el.addEventListener('input', () => {
           const start = el.selectionStart ?? el.value.length;
-          const cleaned = '+' + el.value.replace(/^\+?/, '').replace(/[^\\d]/g, '');
+          const cleaned = '+' + v.replace(/^\+?/, '').replace(/[^\d]/g, '');
           if (el.value !== cleaned) {
             el.value = cleaned;
             const pos = Math.min(cleaned.length, start);
