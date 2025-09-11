@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
   <title>MF Gestor de Citas</title>
   <meta name="theme-color" content="#5e5bff">
-  <link rel="manifest" href="manifest.webmanifest?v=ui8">
+  <link rel="manifest" href="manifest.webmanifest?v=ui9">
   <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <style>
@@ -229,7 +229,7 @@
             <div class="grid2">
               <div class="field"><input id="newName" placeholder="Nombre" /></div>
               <div class="field">
-                <!-- Teléfono: teclado telefónico y soporte "+" -->
+                <!-- Teléfono: teclado telefónico y soporte "+" con prefijo +34 -->
                 <input
                   id="newPhone"
                   type="tel"
@@ -261,7 +261,6 @@
               <input id="autoBackupToggle" type="checkbox" />
               <span class="muted">Auto-descargar copia tras cada cambio de contactos</span>
             </div>
-            <!-- Párrafo explicativo eliminado -->
           </div>
         </div>
 
@@ -604,33 +603,35 @@
       const loadVault = async ()=>{ const st=S.state(); return st?await decryptJson(S.key, st.vault):{list:[]}; };
       const saveVault = async v=>{ const pack=await encryptJson(S.key,v); const st=S.state(); st.vault=pack; S.save(st); };
 
-      // === Teclado telefónico UX: prefijo "+" y limpieza ===
+      // === Teclado telefónico UX: prefijo "+34" y limpieza (FIX regex) ===
       (function setupPhoneInput(){
         const el = $('newPhone');
         if(!el) return;
-        // En caso de que el DOM se inyecte/cachee antiguo
-        el.setAttribute('type','tel');
-        el.setAttribute('inputmode','tel');
-        el.setAttribute('autocomplete','tel');
-        el.setAttribute('enterkeyhint','done');
-        el.setAttribute('pattern','^\\+\\d{6,15}$');
+        // Atributos para abrir el teclado telefónico (iOS/Android)
+        el.type = 'tel';
+        el.inputMode = 'tel';
+        el.autocomplete = 'tel';
+        el.enterKeyHint = 'done';
+        el.pattern = '^\\+\\d{6,15}$';
 
+        // Prefija "+34" al enfocar si está vacío o solo hay "+"
         el.addEventListener('focus', () => {
-          if (!el.value) {
-            el.value = '+';
-            setTimeout(() => {
-              try { el.setSelectionRange(el.value.length, el.value.length); } catch(_){}
-            }, 0);
+          if (!el.value || el.value === '+') {
+            el.value = '+34';
           }
+          setTimeout(() => {
+            try { el.setSelectionRange(el.value.length, el.value.length); } catch (_){}
+          }, 0);
         });
 
+        // Limpieza: mantiene + y dígitos; corrige regex para iOS
         el.addEventListener('input', () => {
-          const start = el.selectionStart ?? el.value.length;
+          const v = el.value;
           const cleaned = '+' + v.replace(/^\+?/, '').replace(/[^\d]/g, '');
-          if (el.value !== cleaned) {
+          if (v !== cleaned) {
             el.value = cleaned;
-            const pos = Math.min(cleaned.length, start);
-            try { el.setSelectionRange(pos, pos); } catch(_){}
+            const pos = cleaned.length;
+            try { el.setSelectionRange(pos, pos); } catch (_){}
           }
         });
       })();
@@ -706,7 +707,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
-        navigator.serviceWorker.register('./service-worker.js?v=ui8').catch(()=>{});
+        navigator.serviceWorker.register('./service-worker.js?v=ui9').catch(()=>{});
       });
     }
   </script>
