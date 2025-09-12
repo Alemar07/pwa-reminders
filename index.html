@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
   <title>MF Gestor de Citas</title>
   <meta name="theme-color" content="#5e5bff">
-  <link rel="manifest" href="manifest.webmanifest?v=ui10">
+  <link rel="manifest" href="manifest.webmanifest?v=ui11">
   <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <style>
@@ -58,8 +58,7 @@
       padding:18px 18px; width:100%;
       background: linear-gradient(90deg, var(--cyan), var(--violet));
       box-shadow: 0 18px 34px rgba(16,181,255,.28), 0 18px 34px rgba(94,91,255,.28);
-      letter-spacing:.2px;
-      text-align:center;
+      letter-spacing:.2px; text-align:center;
     }
     .btn-ghost{
       appearance:none; background:transparent; border:1px dashed rgba(94,91,255,.35);
@@ -85,7 +84,7 @@
     .footer{ padding:18px 16px 24px 16px; display:flex; justify-content:center; align-items:center }
     .logout{ color:#ef4444; text-decoration:underline; cursor:pointer; font-weight:700 }
 
-    /* Contact Search (pro) */
+    /* Contact Search */
     .contact-picker{ display:grid; gap:10px }
     .search-wrap{ position:relative }
     #contactSearch{
@@ -115,6 +114,9 @@
     .toggle input::after{ content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; background:#fff; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,.2); transition:transform .2s; }
     .toggle input:checked{ background:linear-gradient(90deg, var(--cyan), var(--violet)); }
     .toggle input:checked::after{ transform:translateX(18px); }
+
+    /* Toast auto-backup */
+    #autoBackupToast{ display:none; margin-top:12px; padding:10px 12px; border-radius:12px; background:rgba(16,181,255,.08); border:1px solid rgba(16,181,255,.25) }
   </style>
 </head>
 <body>
@@ -134,14 +136,12 @@
         <div class="stage-inner">
           <div class="row">
             <div class="field">
-              <!-- Usuario -->
               <svg class="icon-left" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5.33 0-8 2.67-8 6v1h16v-1c0-3.33-2.67-6-8-6Z" fill="currentColor"/>
               </svg>
               <input id="setupUser" placeholder="Usuario" autocomplete="username">
             </div>
             <div class="field">
-              <!-- Contraseña: candado estilo iOS -->
               <svg class="icon-left" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="5" y="11" width="14" height="10" rx="2"></rect>
@@ -149,7 +149,6 @@
                 </g>
               </svg>
               <input id="setupPass" type="password" placeholder="Contraseña" autocomplete="new-password">
-              <!-- Ojo/Ojo tachado se inyecta por JS -->
               <svg id="toggleSetup" class="icon-right" viewBox="0 0 24 24" fill="none" aria-label="Mostrar/Ocultar"></svg>
             </div>
           </div>
@@ -162,14 +161,12 @@
         <div class="stage-inner">
           <div class="row">
             <div class="field">
-              <!-- Usuario -->
               <svg class="icon-left" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5.33 0-8 2.67-8 6v1h16v-1c0-3.33-2.67-6-8-6Z" fill="currentColor"/>
               </svg>
               <input id="loginUser" placeholder="Usuario" autocomplete="username">
             </div>
             <div class="field">
-              <!-- Contraseña: candado estilo iOS -->
               <svg class="icon-left" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="5" y="11" width="14" height="10" rx="2"></rect>
@@ -177,7 +174,6 @@
                 </g>
               </svg>
               <input id="loginPass" type="password" placeholder="Contraseña" autocomplete="current-password">
-              <!-- Ojo/Ojo tachado se inyecta por JS -->
               <svg id="toggleLogin" class="icon-right" viewBox="0 0 24 24" fill="none" aria-label="Mostrar/Ocultar"></svg>
             </div>
           </div>
@@ -185,7 +181,6 @@
             <button id="btnLogin" class="btn" type="button">Entrar</button>
             <button id="btnReset" class="btn-ghost" type="button" style="display:none">Borrar datos de la app</button>
           </div>
-          <!-- Restaurar en login: eliminado -->
         </div>
       </section>
 
@@ -230,16 +225,7 @@
             <div class="grid2">
               <div class="field"><input id="newName" placeholder="Nombre" /></div>
               <div class="field">
-                <!-- Teléfono: teclado telefónico y soporte "+" con prefijo +34 -->
-                <input
-                  id="newPhone"
-                  type="tel"
-                  inputmode="tel"
-                  autocomplete="tel"
-                  enterkeyhint="done"
-                  pattern="^\+\d{6,15}$"
-                  placeholder="+34600111222"
-                />
+                <input id="newPhone" type="tel" inputmode="tel" autocomplete="tel" enterkeyhint="done" pattern="^\\+\\d{6,15}$" placeholder="+34600111222" />
               </div>
             </div>
             <div style="display:flex; gap:12px; margin-top:12px; flex-wrap:wrap">
@@ -253,14 +239,16 @@
           <div class="container backup-block">
             <label style="margin-top:0">Copias de seguridad</label>
             <div style="display:flex; flex-wrap:wrap; gap:12px">
-              <button id="btnExportFixed" class="btn btn-outline" type="button" title="Copia cifrada con clave fija">Exportar copia cifrada (.json)</button>
-              <button id="btnExportCsv" class="btn btn-outline" type="button" title="CSV (nombre,telefono)">Exportar CSV</button>
-              <input id="restoreInputApp" type="file" accept="application/json" style="display:none">
+              <button id="btnExportFixed" class="btn btn-outline" type="button">Exportar copia cifrada (.json)</button>
+              <button id="btnExportCsv" class="btn btn-outline" type="button">Exportar CSV</button>
               <button id="btnImportApp" class="btn btn-outline" type="button">Importar copia…</button>
             </div>
             <div class="toggle" style="margin-top:12px">
               <input id="autoBackupToggle" type="checkbox" />
               <span class="muted">Auto-descargar copia tras cada cambio de contactos</span>
+            </div>
+            <div id="autoBackupToast" class="muted">
+              Copia creada. <button id="btnDownloadAuto" type="button" class="btn-small btn-outline">Descargar ahora</button>
             </div>
           </div>
         </div>
@@ -273,7 +261,7 @@
   </div>
 
   <script>
-    // ===== Núcleo (estado, cifrado, utilidades) =====
+    // ===== Estado y utilidades =====
     const S = { key:null, user:null, stateKey:'wa-reminders-app-v1',
       state(){ const v=localStorage.getItem(this.stateKey); return v?JSON.parse(v):null; },
       save(o){ localStorage.setItem(this.stateKey, JSON.stringify(o)); },
@@ -303,12 +291,14 @@
       if (typeof content === 'string') blob = new Blob([content], {type: mime});
       else if (content instanceof ArrayBuffer) blob = new Blob([new Uint8Array(content)], {type: mime});
       else blob = new Blob([content], {type: mime});
+
       try {
         if (navigator.canShare && 'share' in navigator) {
           const file = new File([blob], filename, {type: mime});
           if (navigator.canShare({files: [file]})) { await navigator.share({files: [file], title: filename}); return true; }
         }
       } catch(e) {}
+
       try {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -317,6 +307,7 @@
         setTimeout(()=>{ try{ URL.revokeObjectURL(url); }catch(_){ } a.remove(); }, 1200);
         return true;
       } catch(e) {}
+
       try {
         const buf = await blob.arrayBuffer();
         let binary = ''; const bytes = new Uint8Array(buf);
@@ -326,6 +317,7 @@
         window.open(dataUrl, '_blank');
         return true;
       } catch(e) {}
+
       try {
         if (typeof content === 'string' && navigator.clipboard) {
           await navigator.clipboard.writeText(content);
@@ -336,27 +328,24 @@
       alert('No se pudo descargar el archivo en este navegador.');
       return false;
     }
-    const saveJson = (name, obj) => saveFileSmart(name, 'application/json', JSON.stringify(obj, null, 2));
-    const saveCsv  = (name, csv) => saveFileSmart(name, 'text/csv', csv);
 
-    // ===== Apertura sin “pantalla en blanco” en PWA =====
+    const saveJson = (name, obj) => saveFileSmart(name, 'application/json', JSON.stringify(obj, null, 2));
+    const saveCsv  = (name, csv) => saveFileSmart(name, 'text/csv;charset=utf-8', '\uFEFF' + csv); // BOM + MIME
+
+    // ===== Apertura externa sin “pantalla en blanco” =====
     function openExternal(url){
       const isStandalone =
         (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
         (typeof window.navigator.standalone === 'boolean' && window.navigator.standalone);
-
-      if (isStandalone) {
-        // En PWA (iOS/Android), navegar en la misma ventana evita la pestaña/hoja en blanco
-        window.location.href = url;
-      } else {
-        // En navegador normal, abrir en nueva pestaña sin dejar tab huérfana
+      if (isStandalone) { window.location.href = url; }
+      else {
         const a = document.createElement('a');
         a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
         document.body.appendChild(a); a.click(); a.remove();
       }
     }
 
-    // ===== UI helpers y navegación =====
+    // ===== UI / navegación =====
     function setHeaderTitle(t){ const h=$('hdrTitle'); if(h) h.textContent=t; }
     function toggleResetVisibility(){ const reset=$('btnReset'); if(reset) reset.style.display = S.state() ? 'inline-flex' : 'none'; }
     function show(id){
@@ -368,11 +357,6 @@
       window.scrollTo(0,0);
     }
 
-    function setDefaultDate(){
-      const d=new Date(Date.now()+60*60*1000);
-      const iso=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
-      $('dt') && ($('dt').value=iso);
-    }
     const isPhoneValid = p => /^\+\d{6,15}$/.test(p);
 
     // ===== Buscador de contactos =====
@@ -382,12 +366,10 @@
       const name = diac(c.name||''), phone = (c.phone||'').replace(/\s+/g,'');
       const qn = diac(q), qd = q.replace(/\D+/g,'');
       let score = -Infinity;
-      const ni = name.indexOf(qn);
-      if(ni>=0){ score = Math.max(score, 100 - ni); }
-      if(name.startsWith(qn)){ score = Math.max(score, 140); }
-      const pi = phone.indexOf(qd);
-      if(qd && pi>=0){ score = Math.max(score, 120 - pi); }
-      if(qd && phone.startsWith(qd)){ score = Math.max(score, 150); }
+      const ni = name.indexOf(qn); if(ni>=0) score = Math.max(score, 100 - ni);
+      if(name.startsWith(qn)) score = Math.max(score, 140);
+      const pi = phone.indexOf(qd); if(qd && pi>=0) score = Math.max(score, 120 - pi);
+      if(qd && phone.startsWith(qd)) score = Math.max(score, 150);
       return score;
     }
     function esc(s){ return String(s).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch])); }
@@ -468,7 +450,7 @@
       document.addEventListener('click', (e)=>{ if(!box.hidden && !box.contains(e.target) && e.target!==input){ setTimeout(()=>{ box.hidden=true; }, 80); } });
     }
 
-    // ===== Lista/select contactos =====
+    // ===== Select de contactos =====
     function refreshContactsSelect(list){
       window.__contacts = Array.isArray(list) ? list.slice() : [];
       const sel=$('contactSelect'); if(!sel) return;
@@ -489,7 +471,12 @@
       return `¡Hola! 👋 Tienes un recordatorio para el ${d} a las ${t}.`;
     }
 
-    // ===== Export/Import (clave fija) =====
+    // ===== Export/Import con clave fija =====
+    let pendingAutoBackup = null; // {name, jsonString}
+    function showAutoToast(show){
+      const t=$('autoBackupToast'); if(t) t.style.display = show ? 'block' : 'none';
+    }
+
     async function exportFixedBackup(auto=false){
       const st=S.state(); if(!st || !S.key){ if(!auto) alert('Inicia sesión para exportar.'); return; }
       const vault=await decryptJson(S.key, st.vault);
@@ -498,8 +485,16 @@
       const pack = await encryptJson(aesKey, { list: vault.list || [] });
       const payload = { format: 'mf-contacts-fixed-v1', saltB64, iv: pack.iv, ct: pack.ct, createdAt: new Date().toISOString() };
       const name = auto ? ('autobackup-contactos-' + new Date().toISOString().replace(/[-:T.Z]/g,'').slice(0,14) + '.json') : 'copia-contactos.json';
-      await saveJson(name, payload);
+
+      if (auto) {
+        // Evita bloqueos por falta de gesto del usuario: ofrecer descarga manual
+        pendingAutoBackup = { name, json: JSON.stringify(payload, null, 2) };
+        showAutoToast(true);
+      } else {
+        await saveJson(name, payload);
+      }
     }
+
     async function importFixedBackupFromFile(file){
       const text=await file.text();
       let data;
@@ -527,6 +522,16 @@
       if(getAutoBackup()) exportFixedBackup(true);
     }
 
+    // ===== CSV =====
+    async function exportCSV(){
+      if(!S.key){ alert('Inicia sesión para exportar CSV.'); return; }
+      const st=S.state(); if(!st){ alert('No hay datos.'); return; }
+      const vault=await decryptJson(S.key, st.vault);
+      const rows=[['nombre','telefono'], ...(vault.list||[]).map(c=>[c.name, c.phone])];
+      const csv = rows.map(r=>r.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(',')).join('\n');
+      saveCsv('contactos.csv', csv);
+    }
+
     // ===== Auto-backup flag =====
     function getAutoBackup(){ const st=S.state(); return !!(st && st.autoBackup); }
     function setAutoBackup(v){
@@ -535,35 +540,28 @@
       const t=$('autoBackupToggle'); if(t) t.checked = st.autoBackup;
     }
 
-    // ===== Ojo mostrar/ocultar (estilo Apple) =====
+    // ===== Ojo mostrar/ocultar (estilo iOS) =====
     const eyeOpen = `
       <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 5c-5.5 0-10 4.5-11 7 1 2.5 5.5 7 11 7s10-4.5 11-7c-1-2.5-5.5-7-11-7Z"></path>
         <circle cx="12" cy="12" r="3.5" fill="currentColor" stroke="none"></circle>
-      </g>
-    `;
+      </g>`;
     const eyeOff = `
       <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 5c-5.5 0-10 4.5-11 7 1 2.5 5.5 7 11 7s10-4.5 11-7c-1-2.5-5.5-7-11-7Z"></path>
         <circle cx="12" cy="12" r="3.5" fill="currentColor" stroke="none"></circle>
         <path d="M3 3L21 21"></path>
-      </g>
-    `;
-    function setEyeIcon(el, visible){
-      if(!el) return;
-      el.innerHTML = visible ? eyeOff : eyeOpen; // visible=true => ojo tachado
-    }
+      </g>`;
+    function setEyeIcon(el, visible){ if(!el) return; el.innerHTML = visible ? eyeOff : eyeOpen; }
 
     // ===== Eventos =====
     function wireEvents(){
       const toggle = (inputId, svgId) => {
-        const i=$(inputId), s=$(svgId);
-        if(!i || !s) return;
+        const i=$(inputId), s=$(svgId); if(!i || !s) return;
         i.type = i.type==='password' ? 'text' : 'password';
         setEyeIcon(s, i.type==='text');
       };
 
-      // Iconos iniciales
       setEyeIcon($('toggleLogin'), false);
       setEyeIcon($('toggleSetup'), false);
 
@@ -610,34 +608,12 @@
       const loadVault = async ()=>{ const st=S.state(); return st?await decryptJson(S.key, st.vault):{list:[]}; };
       const saveVault = async v=>{ const pack=await encryptJson(S.key,v); const st=S.state(); st.vault=pack; S.save(st); };
 
-      // === Teclado telefónico UX: prefijo "+34" y limpieza (regex correcta) ===
+      // Teléfono: prefijo +34 y limpieza
       (function setupPhoneInput(){
-        const el = $('newPhone');
-        if(!el) return;
-        el.type = 'tel';
-        el.inputMode = 'tel';
-        el.autocomplete = 'tel';
-        el.enterKeyHint = 'done';
-        el.pattern = '^\\+\\d{6,15}$';
-
-        el.addEventListener('focus', () => {
-          if (!el.value || el.value === '+') {
-            el.value = '+34';
-          }
-          setTimeout(() => {
-            try { el.setSelectionRange(el.value.length, el.value.length); } catch (_){}
-          }, 0);
-        });
-
-        el.addEventListener('input', () => {
-          const v = el.value;
-          const cleaned = '+' + v.replace(/^\+?/, '').replace(/[^\d]/g, '');
-          if (v !== cleaned) {
-            el.value = cleaned;
-            const pos = cleaned.length;
-            try { el.setSelectionRange(pos, pos); } catch (_){}
-          }
-        });
+        const el = $('newPhone'); if(!el) return;
+        el.type='tel'; el.inputMode='tel'; el.autocomplete='tel'; el.enterKeyHint='done'; el.pattern='^\\+\\d{6,15}$';
+        el.addEventListener('focus', ()=>{ if(!el.value || el.value==='+') el.value='+34'; setTimeout(()=>{ try{ el.setSelectionRange(el.value.length, el.value.length);}catch(_){}} ,0); });
+        el.addEventListener('input', ()=>{ const v=el.value; const cleaned='+'+v.replace(/^\+?/, '').replace(/[^\d]/g,''); if(v!==cleaned){ el.value=cleaned; try{ el.setSelectionRange(cleaned.length, cleaned.length);}catch(_){}} });
       })();
 
       $('btnAdd')?.addEventListener('click', async ()=>{
@@ -666,7 +642,6 @@
 
       $('dt')?.addEventListener('change', ()=>{ const m=$('msg'); if(m) m.value=buildMessage(); });
 
-      // Abrir WhatsApp sin "pantalla en blanco" al volver
       $('btnSend')?.addEventListener('click', ()=>{
         const sel=$('contactSelect'); const phone=sel?sel.value:'';
         if(!isPhoneValid(phone)){ alert('Selecciona un contacto válido'); return; }
@@ -675,11 +650,21 @@
         openExternal(url);
       });
 
-      // Backups
+      // Export/Import/Auto
       $('btnExportFixed')?.addEventListener('click', ()=>exportFixedBackup(false));
       $('btnExportCsv')?.addEventListener('click', exportCSV);
-      $('btnImportApp')?.addEventListener('click', ()=>{ const i=$('restoreInputApp'); i.value=''; i.onchange=e=>{ const f=e.target.files?.[0]; if(f) importFixedBackupFromFile(f); i.value=''; }; i.click(); });
+
+      $('btnImportApp')?.addEventListener('click', ()=>{
+        const i=document.createElement('input');
+        i.type='file'; i.accept='application/json,.json';
+        i.onchange=e=>{ const f=i.files?.[0]; if(f) importFixedBackupFromFile(f); i.remove(); };
+        document.body.appendChild(i); i.click();
+      });
+
       $('autoBackupToggle')?.addEventListener('change', (e)=>setAutoBackup(e.target.checked));
+      $('btnDownloadAuto')?.addEventListener('click', ()=>{
+        if(pendingAutoBackup){ saveFileSmart(pendingAutoBackup.name, 'application/json', pendingAutoBackup.json); pendingAutoBackup=null; showAutoToast(false); }
+      });
 
       // Buscador
       wireSearch();
@@ -706,14 +691,14 @@
       setTimeout(()=>{ toTop(); const t=$('autoBackupToggle'); if(t && state) t.checked = !!state.autoBackup; }, 40);
     }
     document.addEventListener('DOMContentLoaded', init);
-    window.addEventListener('pageshow', function(e){ if(e.persisted) toTop(); });
-    window.addEventListener('orientationchange', function(){ setTimeout(toTop, 60); });
+    window.addEventListener('pageshow', e=>{ if(e.persisted) toTop(); });
+    window.addEventListener('orientationchange', ()=>setTimeout(toTop, 60));
   </script>
 
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
-        navigator.serviceWorker.register('./service-worker.js?v=ui10').catch(()=>{});
+        navigator.serviceWorker.register('./service-worker.js?v=ui11').catch(()=>{});
       });
     }
   </script>
