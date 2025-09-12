@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
   <title>MF Gestor de Citas</title>
   <meta name="theme-color" content="#5e5bff">
-  <link rel="manifest" href="manifest.webmanifest?v=ui9">
+  <link rel="manifest" href="manifest.webmanifest?v=ui10">
   <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <style>
@@ -59,6 +59,7 @@
       background: linear-gradient(90deg, var(--cyan), var(--violet));
       box-shadow: 0 18px 34px rgba(16,181,255,.28), 0 18px 34px rgba(94,91,255,.28);
       letter-spacing:.2px;
+      text-align:center;
     }
     .btn-ghost{
       appearance:none; background:transparent; border:1px dashed rgba(94,91,255,.35);
@@ -338,6 +339,23 @@
     const saveJson = (name, obj) => saveFileSmart(name, 'application/json', JSON.stringify(obj, null, 2));
     const saveCsv  = (name, csv) => saveFileSmart(name, 'text/csv', csv);
 
+    // ===== Apertura sin “pantalla en blanco” en PWA =====
+    function openExternal(url){
+      const isStandalone =
+        (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+        (typeof window.navigator.standalone === 'boolean' && window.navigator.standalone);
+
+      if (isStandalone) {
+        // En PWA (iOS/Android), navegar en la misma ventana evita la pestaña/hoja en blanco
+        window.location.href = url;
+      } else {
+        // En navegador normal, abrir en nueva pestaña sin dejar tab huérfana
+        const a = document.createElement('a');
+        a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+        document.body.appendChild(a); a.click(); a.remove();
+      }
+    }
+
     // ===== UI helpers y navegación =====
     function setHeaderTitle(t){ const h=$('hdrTitle'); if(h) h.textContent=t; }
     function toggleResetVisibility(){ const reset=$('btnReset'); if(reset) reset.style.display = S.state() ? 'inline-flex' : 'none'; }
@@ -470,7 +488,6 @@
       const t=when.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
       return `¡Hola! 👋 Tienes un recordatorio para el ${d} a las ${t}.`;
     }
-    function updateMessage(){ const m=$('msg'); if(m) m.value=buildMessage(); }
 
     // ===== Export/Import (clave fija) =====
     async function exportFixedBackup(auto=false){
@@ -508,16 +525,6 @@
       refreshContactsSelect(vault.list);
       alert(`Importación completa. Añadidos: ${added}. Ya existentes: ${skipped}.`);
       if(getAutoBackup()) exportFixedBackup(true);
-    }
-
-    // ===== CSV =====
-    async function exportCSV(){
-      if(!S.key){ alert('Inicia sesión para exportar CSV.'); return; }
-      const st=S.state(); if(!st){ alert('No hay datos.'); return; }
-      const vault=await decryptJson(S.key, st.vault);
-      const rows=[['nombre','telefono'], ...(vault.list||[]).map(c=>[c.name, c.phone])];
-      const csv = rows.map(r=>r.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(',')).join('\n');
-      saveCsv('contactos.csv', csv);
     }
 
     // ===== Auto-backup flag =====
@@ -603,18 +610,16 @@
       const loadVault = async ()=>{ const st=S.state(); return st?await decryptJson(S.key, st.vault):{list:[]}; };
       const saveVault = async v=>{ const pack=await encryptJson(S.key,v); const st=S.state(); st.vault=pack; S.save(st); };
 
-      // === Teclado telefónico UX: prefijo "+34" y limpieza (FIX regex) ===
+      // === Teclado telefónico UX: prefijo "+34" y limpieza (regex correcta) ===
       (function setupPhoneInput(){
         const el = $('newPhone');
         if(!el) return;
-        // Atributos para abrir el teclado telefónico (iOS/Android)
         el.type = 'tel';
         el.inputMode = 'tel';
         el.autocomplete = 'tel';
         el.enterKeyHint = 'done';
         el.pattern = '^\\+\\d{6,15}$';
 
-        // Prefija "+34" al enfocar si está vacío o solo hay "+"
         el.addEventListener('focus', () => {
           if (!el.value || el.value === '+') {
             el.value = '+34';
@@ -624,7 +629,6 @@
           }, 0);
         });
 
-        // Limpieza: mantiene + y dígitos; corrige regex para iOS
         el.addEventListener('input', () => {
           const v = el.value;
           const cleaned = '+' + v.replace(/^\+?/, '').replace(/[^\d]/g, '');
@@ -661,12 +665,14 @@
       });
 
       $('dt')?.addEventListener('change', ()=>{ const m=$('msg'); if(m) m.value=buildMessage(); });
+
+      // Abrir WhatsApp sin "pantalla en blanco" al volver
       $('btnSend')?.addEventListener('click', ()=>{
         const sel=$('contactSelect'); const phone=sel?sel.value:'';
         if(!isPhoneValid(phone)){ alert('Selecciona un contacto válido'); return; }
         const text=encodeURIComponent(($('msg')?.value||buildMessage()).trim());
         const url=`https://wa.me/${phone.replace('+','')}/?text=${text}`;
-        window.open(url,'_blank');
+        openExternal(url);
       });
 
       // Backups
@@ -707,7 +713,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
-        navigator.serviceWorker.register('./service-worker.js?v=ui9').catch(()=>{});
+        navigator.serviceWorker.register('./service-worker.js?v=ui10').catch(()=>{});
       });
     }
   </script>
